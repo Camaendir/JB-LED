@@ -7,7 +7,7 @@ pixellength = 450
 class Panel(Object):
     def __init__(self):
         self.color = [ 0, 0, 0]
-        self.build(True, pixellength, [self.color] * pixellength)
+        self.build(True, pixellength -1, [self.color] * pixellength)
 
 
     def setColor(self, color):
