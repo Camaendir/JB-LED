@@ -1,7 +1,7 @@
 from SubEngine import *
 
 global pixellength
-pixellength = 450
+pixellength = 450 
 
 
 class Panel(Object):
@@ -21,7 +21,7 @@ class Fading(SubEngine):
         self.rgb = [255,0,0]
         self.phase = ([0, 1, 0], [-1, 0, 0], [0, 0, 1], [0, -1, 0], [1, 0, 0], [0, 0, -1])
         self.index = 0
-        self.build("Fading",pixellength, 5)
+        self.build("Fading",449, 5)
 
         self.p = Panel()
         self.addObj(self.p)
@@ -34,7 +34,7 @@ class Fading(SubEngine):
     def update(self):
         self.getColor()
         self.p.setColor(self.rgb)
-        print(self.rgb)
+
 
     def getColor(self, speed=1):
         for i in range(3):

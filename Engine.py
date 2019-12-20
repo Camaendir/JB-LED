@@ -1,6 +1,9 @@
 from time import sleep
+import copy
+
 from strip import *
 import paho.mqtt.client as mqtt
+
 from MainLamp import *
 
 def on_message(client, userdata, msg):
@@ -55,9 +58,10 @@ while True:
     for pixelcolor in frame:
         for rgb in range(len(pixelcolor)):
             pixelcolor[rgb] = max(pixelcolor[rgb],0)
+
         if pixelcolor is not lastpixel[index]:
             pixels.setPixel(index, color=pixelcolor)
         index = index + 1
     pixels.show()
-    lastpixel = frame
+    lastpixel = copy.deepcopy(frame)
     sleep(0.01)
