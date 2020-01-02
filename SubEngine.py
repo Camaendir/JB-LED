@@ -1,7 +1,3 @@
-# Obj var:
-#   isVisible, position, length, content[[rgb]]
-# Obj methoden:
-#   void update(),
 class Layer:
 
     def build(self, pixellength=450):
@@ -34,7 +30,7 @@ class SubEngine:
     def build(self, mqtttopic, pixellength, layercount):
         self.layList = []
         self.mqttTopic = mqtttopic
-        self.isEnabled = True
+        self.isEnabled = False 
         self.pixellength = pixellength
         self.transparent = (-1,-1,-1)
 
@@ -63,14 +59,12 @@ class SubEngine:
             for j in range(self.pixellength):
                 if plain[j]==self.transparent and frames[i][j]!=self.transparent:
                     plain[j] = frames[i][j]
-        return plain
-
-    def getState(self):
-        return self.isEnabled
+        return plain    
 
     def on_message(self, topic, payload):
-        if topic is "enabled":
-            self.idEnabled = (payload is "true")
+        if topic == "enable":
+            print([topic,payload])
+            self.isEnabled = payload.lower() in ("true", "t", "1", "on") 
         self.onMessage(topic, payload)
         
 
