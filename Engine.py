@@ -5,14 +5,17 @@ from strip import *
 import paho.mqtt.client as mqtt
 
 from MainLamp import *
+from Musik import *
+
 
 global layer
-global brightnis
+global br
 
-def on_message(client, userdata, msg):   
+def on_message(client, userdata, msg):
+    global br
     topic = msg.topic
+    print([msg.topic,msg.payload])
     if topic == "strip/command":
-        print(msg.payload)
         if msg.payload == "update":
             publishState()
         elif msg.payload == "reset":
@@ -20,8 +23,7 @@ def on_message(client, userdata, msg):
     elif topic.startswith("strip/color/"):
         topic = topic[12:]
         if topic == "brightnis":
-            print(int(msg.payload))
-            brightnis= int(msg.payload)
+            br= int( msg.payload)
     elif topic.startswith("strip/effekt/"):
         topic = topic[13:]
         for subengine in layer:
@@ -30,15 +32,15 @@ def on_message(client, userdata, msg):
                 subengine.on_message(t,msg.payload)
 
 def publishState():
-    client.publish(topic="strip/info/color/brightnis",payload=brightnis)
+    client.publish(topic="strip/info/color/brightnis",payload=br)
     for subengine in layer:
         tp = subengine.getStates()
         for subj in tp:
             client.publish(topic=subj[0], payload=subj[1])
 
 
-layer = [Fading(), Lamp(), Alarm()]
-brightnis = 100 
+layer = [WaveSpec(),Fading(), Lamp(), MultiSnake(), Alarm()]
+br = 255
 pixellength = 450
 lastpixel = []
 
@@ -53,8 +55,8 @@ client.subscribe("strip/effekt/#")
 client.subscribe("strip/command")
 client.subscribe("strip/color/#")
 client.loop_start()
-publishState()
 
+publishState()
 
 lastpixel =[[-1,-1,-1]] * pixellength
 while True:
@@ -72,13 +74,16 @@ while True:
     index = 0
 
     for pixelcolor in frame:
-        br = 255- brightnis 
+        bri = 255 - br
         for rgb in range(len(pixelcolor)):
             
             pixelcolor[rgb] = max(pixelcolor[rgb],0)
 
         if pixelcolor is not lastpixel[index]:
-            pixels.setPixel(index, color=pixelcolor)
+            cl = []
+            for i in pixelcolor:
+                cl.append(max(i-bri,0)) 
+            pixels.setPixel(index, color=cl)
         index = index + 1
     pixels.show()
     lastpixel = copy.deepcopy(frame)

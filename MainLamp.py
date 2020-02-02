@@ -1,6 +1,8 @@
 import math
 from SubEngine import *
 
+from math import floor
+from random import random
 
 global pixellength
 pixellength = 450 
@@ -90,7 +92,7 @@ class Lamp(SubEngine):
 class Snake(Object):
 
     def __init__(self, length = 25, color = [255,0,0]):
-        self.build()
+        self.build(position=0)
         self.length = length
         self.setColor(color)
         self.isVisible = True
@@ -100,6 +102,8 @@ class Snake(Object):
         self.double = self.double + speed 
         if self.double >= pixellength:
             self.double = 0
+        elif self.double < 0:
+            self.double = pixellength + self.double
         self.position = int(self.double)
     
     def setColor(self, color):
@@ -150,3 +154,39 @@ class Alarm(SubEngine):
         retVal.append(["strip/info/Alarm/color", '#%02x%02x%02x' % tuple(self.rgb)])
         return retVal
 
+
+class MultiSnake(SubEngine):
+
+    def __init__(self):
+        self.snkCount = 10
+        self.build("MultiSnake", pixellength, self.snkCount)
+        self.snakes = [] 
+        for i in range(self.snkCount):
+            self.snakes.append([Snake(), 0.0, 0])
+            self.respawn(self.snakes[i])
+            self.addObj(self.snakes[i][0], layer=i)
+
+    def onMessage(self, topic, payload):
+        pass
+
+    def update(self):
+        for snk in self.snakes:
+            snk[0].move(speed=snk[1])
+            snk[2] = snk[2] - snk[1]
+            if snk[2]<=0:
+                self.respawn(snk)
+
+    def getStates(self):
+        retVal = []
+        retVal.append(["strip/info/MultiSnake/enable", str(self.isEnabled)])
+        return retVal
+
+    def respawn(self, wrapper):
+        wrapper[0].length = rdm(3, 60)
+        wrapper[0].setColor([rdm(0, 256), rdm(0, 256), rdm(0, 256)])
+        wrapper[0].position = rdm(0, 450)
+        wrapper[1] = rdm(1,10)*0.1+0.5
+        wrapper[2] = rdm(200,800) 
+
+def rdm(min, max):
+    return int(min + (random() * (max-min)))
