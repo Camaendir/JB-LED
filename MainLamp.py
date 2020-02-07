@@ -92,10 +92,9 @@ class Lamp(SubEngine):
 class Snake(Object):
 
     def __init__(self, length = 25, color = [255,0,0]):
-        self.build(position=0)
+        self.build(True,0,[])
         self.length = length
         self.setColor(color)
-        self.isVisible = True
         self.double = self.position
 
     def move(self, speed = 1):

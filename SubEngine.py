@@ -15,8 +15,9 @@ class Layer:
         field = []
         for i in range(self.pixellength):
             field.append(self.transparent)
-
+        
         for obj in self.objList:
+            print(obj)
             if obj.isVisible:
                 for i in range(len(obj.content)):
                     index = obj.position - i
@@ -71,7 +72,7 @@ class SubEngine:
 
 class Object:
 
-    def build(self, isVisible=False, position=0, content=[]):
+    def build(self, isVisible, position, content):
         self.isVisible = isVisible
         self.position = position
         self.content = content

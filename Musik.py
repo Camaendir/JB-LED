@@ -100,10 +100,7 @@ class WaveSpec(SubEngine):
         self.spectrum = FrSpectrum()
 
         self.obj = Object()
-        self.obj.build(isVisible=True)
-        self.obj.position = 359
-        self.obj.content = [[ -1, -1, -1]]*450
-
+        self.obj.build(True,359,[[-1,-1,-1]]*450)
         self.addObj(self.obj)
 
     def getStates(self):
@@ -138,6 +135,40 @@ class WaveSpec(SubEngine):
 
             self.obj.content[i]= self.colors[int(data[i]/30)]
 
+class Pulse(Object):
+
+    def __init__(self):
+        self.build(True,370,[])
+        print(self.isVisible)
+
+    def setColor(self, color, rate):
+        self.content = []
+        for i in range(rate):
+            self.content.append(color[:])
+            self.content.insert(0, color[:])
+
+
+
+
+
+class SnakeVibe(SubEngine):
+
+    def __init__(self):
+        self.build("SnakeVibe", 450, 1)
+        self.pulse = Pulse()
+        self.addObj(Pulse)
+        self.isEnabled = True
+
+    def update(self):
+        pass
+    
+    def onMessage(self, topic, payload):
+        pass
+
+    def getStates(self):
+        retVal = []
+        retVal.append(["strip/info/SnakeVibe/enable", str(self.isEnabled)])
+        return retVal
 
 
 
