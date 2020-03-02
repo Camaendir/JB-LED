@@ -17,9 +17,9 @@ class Adapter(threading.Thread):
 
         self.fft_data = []
         self.amp_data = []
-
         self.p = pyaudio.PyAudio()
         self.chunk = 1024
+        self.offset = [0]*self.chunk
         self.stream = self.p.open(
             format=pyaudio.paInt16,
             channels=1,
@@ -28,6 +28,7 @@ class Adapter(threading.Thread):
             output=False,
             frames_per_buffer=self.chunk
         )
+        self.offsetrange = []
 
     def terminate(self):
         self.isEnabled = False
@@ -36,16 +37,33 @@ class Adapter(threading.Thread):
 
     def run(self):
         self.isEnabled = True
+        print("Bitte leise sein")
+        for i in range(200):
+            raw = struct.unpack(str(2*self.chunk)+ 'B', self.stream.read(self.chunk, exception_on_overflow=False))
+            ad = raw[:]
+            fft = np.fft.fft(raw)
+            fft = np.abs(fft)
+            fft = list(fft[0:self.chunk])
+            fft = map(self.resize, fft)
+            self.offsetrange.append(fft)
+        for i in range(self.chunk):
+            full = 0
+            for j in range(len(self.offsetrange)):
+                full = full + self.offsetrange[j][i]
+            self.offset[i] = float(full) / len(self.offsetrange)
+        print("Kannst wieder laut sein")
         while self.isEnabled:
             data_raw = struct.unpack(str(2 * self.chunk) + 'B', self.stream.read(self.chunk, exception_on_overflow=False))
             self.amp_data = data_raw[:]
-            print(np.mean(data_raw))
-            data_fft = np.fft.fft(data_raw * np.hanning(len(data_raw)))
+            data_fft = np.fft.fft(data_raw) # * np.hanning(len(data_raw)))
             data_fft = np.abs(data_fft)
             data_fft = list(data_fft[0:self.chunk])
             data_fft = map(self.resize, data_fft)
-            self.fft_data = data_fft[:]
-            print([max(data_fft),max(data_raw)])
+            diff = []
+            zip1 = zip(data_fft, self.offset)
+            for a,b in zip1:
+                diff.append(a-b)
+            self.fft_data = diff[:]
 
     def resize(self, num):
         return (num*2)/self.chunk
@@ -99,6 +117,8 @@ class SpecTrain(SubEngine):
         self.build("Train" ,450, 1)
         self.obj = Object()
         self.obj.build(True, 0, [[-1,-1,-1]]*450)
+        self.addObj(self.obj)
+        self.First = 0
 
     def getStates(self):
         retVal = []
@@ -108,22 +128,35 @@ class SpecTrain(SubEngine):
     def update(self):
         global adapter
         data = adapter.fft_data[:]
+        if self.First == 0:
+            print(data)
+            self.First = 1
+        data = data[20:30]
         index = data.index(max(data))
         for i in range(449):
-            self.obj.content[450-i] = self.obj.content[449-i]
-        if data[index] >= 75:
+            self.obj.content[449-i] = self.obj.content[448-i]
+        if data[index] >= 15:
+            print("over")
             val = data[index]
-            val = val - 75
+            print("index: " + str(index))
+            print("data: " + str(val))
+            val = val - 7
             val = float(val) / 2
             val = int(val)
-            bri = val
+            bri = 1.0
             # 0 - 200 -> 0 - 360
             hue = index
             #0-len -> 0-360
-            hue = hue * (360 / len(data))
-            self.obj.content[0] = hls_to_rgb(hue, bri, 50)
+            hue = float(hue) / len(data)
+            print("hue: " + str(hue))
+            print("brightness: " + str(bri))
+            bri = float(bri)
+            #print("rgb: " + str(hls_to_rgb(hue, bri, 0.5)))
+            rgb = hls_to_rgb(hue, 0.5, bri)
+            self.obj.content[0] = [i * 255 for i in rgb]
         else:
-            self.obj.content[0] = [0, 0, 0]
+            print(data[index])
+            self.obj.content[0] = [-1, -1, -1]
 
     def onMessage(self):
         pass
