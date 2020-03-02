@@ -5,6 +5,7 @@ import pyaudio
 import struct
 import numpy as np
 import threading
+from colorsys import hls_to_rgb
 
 from SubEngine import *
 
@@ -92,6 +93,40 @@ class FrSpectrum:
                 buffer = buffer + data[i]
         return retVal
 
+class SpecTrain(SubEngine):
+
+    def __init__(self):
+        self.build("Train" ,450, 1)
+        self.obj = Object()
+        self.obj.build(True, 0, [[-1,-1,-1]]*450)
+
+    def getStates(self):
+        retVal = []
+        retVal.append(["strip/info/Train/enable", str(self.isEnabled)])
+        return retVal
+
+    def update(self):
+        global adapter
+        data = adapter.fft_data[:]
+        index = data.index(max(data))
+        for i in range(449):
+            self.obj.content[450-i] = self.obj.content[449-i]
+        if data[index] >= 75:
+            val = data[index]
+            val = val - 75
+            val = float(val) / 2
+            val = int(val)
+            bri = val
+            # 0 - 200 -> 0 - 360
+            hue = index
+            #0-len -> 0-360
+            hue = hue * (360 / len(data))
+            self.obj.content[0] = hls_to_rgb(hue, bri, 50)
+        else:
+            self.obj.content[0] = [0, 0, 0]
+
+    def onMessage(self):
+        pass
 
 class WaveSpec(SubEngine):
 
