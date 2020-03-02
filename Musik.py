@@ -122,6 +122,9 @@ class WaveSpec(SubEngine):
         self.colors[0] = [-1, -1, -1]
 
     def update(self):
+        self.obj.position = self.obj.position + 1
+        if self.obj.position >=450:
+            self.obj.position = 0
         data = adapter.fft_data[:]
         data = self.spectrum.getSpectrum(data)
         data[0] = 0

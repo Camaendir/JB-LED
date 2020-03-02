@@ -17,7 +17,6 @@ class Layer:
             field.append(self.transparent)
         
         for obj in self.objList:
-            print(obj)
             if obj.isVisible:
                 for i in range(len(obj.content)):
                     index = obj.position - i
