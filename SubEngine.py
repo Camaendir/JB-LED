@@ -75,3 +75,68 @@ class Object:
         self.isVisible = isVisible
         self.position = position
         self.content = content
+
+class Row:
+
+    def __init__(self):
+        self.position = 0;
+        self.isVisible = False
+        self.content = []
+
+        self.kernelContent = []
+
+        self.isMirrowed = False
+        self.isLooped = False
+        self.isRepeated = False
+        self.repeats = 0
+
+    #setMethods
+
+    def setContent(self, pContent):
+        self.kernelContent = pContent[:]
+        self.processing()
+
+    def stayMirrored(self, pBoolean):
+        self.isMirrowed = pBoolean
+        self.processing()
+
+    def stayRepeated(self, pBoolean, pNum):
+        if pNum > 0 and pBoolean:
+            self.isRepeated = True
+            self.repeats = pNum
+        else:
+            self.isRepeated = False
+            self.repeats = 0
+        self.processing()
+
+    def stayLooped(self, pBoolean):
+        self.isLooped = pBoolean
+        self.processing()
+
+    #Proccesing
+    def shift(self, pixel=[-1, -1, -1]):
+        if len(self.kernelContent)==0:
+            return
+        if self.isLooped:
+            pixel = self.kernelContent[5]
+            print([len(self.kernelContent)-1])
+        self.kernelContent = self.kernelContent[1:]
+        self.kernelContent.insert(0, pixel)
+        self.kernelContent = self.kernelContent[:-1]
+        self.processing()
+
+    def processing(self):
+        newContent = self.kernelContent[:]
+
+        #Mirror
+        if self.isMirrowed:
+            for i in range(len(self.kernelContent) - 1, -1, -1):
+                newContent.append(self.kernelContent[i])
+
+        #Repeat
+        if self.isRepeated:
+            newContent = newContent * self.repeats
+
+        #Push to Content
+        self.content = newContent
+        print(self.content)

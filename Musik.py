@@ -120,10 +120,13 @@ class SpecTrain(SubEngine):
         self.obj.build(True, 0, [[-1,-1,-1]]*450)
         self.addObj(self.obj)
         self.First = 0
-        self.bufferlength = 7
+        self.bufferlength = 11
         self.buffer = [[0,0,0]]*self.bufferlength
         self.gauss = (41,26,16,7,4,1)
         self.buffermid = int((self.bufferlength-1)/2)
+        self.gaussaverage = self.gauss[0]
+        for i in range(self.buffermid):
+            self.gaussaverage = self.gaussaverage +(2* self.gauss[1+i])
 
     def getStates(self):
         retVal = []
@@ -133,53 +136,52 @@ class SpecTrain(SubEngine):
     def update(self):
         global adapter
         data = adapter.fft_data[:]
-        if self.First == 0:
-            print(data)
-            self.First = 1
-        data = data[20:30]
+        data = data[10:30]
         index = data.index(max(data))
         for i in range(449):
             self.obj.content[449-i] = self.obj.content[448-i]
-        frame = [0,0,0]
+        frame = [-1,0]
         if data[index] >= 15:
-            print("over")
+            #print("over")
             val = data[index]
-            print("index: " + str(index))
-            print("data: " + str(val))
             val = val - 7
             val = float(val) / 2
             val = int(val)
             bri = 1.0
-            # 0 - 200 -> 0 - 360
             hue = index
-            #0-len -> 0-360
             hue = float(hue) / len(data)
-            print("hue: " + str(hue))
-            print("brightness: " + str(bri))
-            bri = float(bri)
-            #print("rgb: " + str(hls_to_rgb(hue, bri, 0.5)))
-            rgb = hls_to_rgb(hue, 0.5, bri)
-            frame = [i * 255 for i in rgb]
+            frame = [hue, 1]
         else:
-            print(data[index])
+            pass
+            #print(data[index])
+        #print("frame: " + str(frame))
         self.buffer[0] = frame
-        together = self.gauss[0]
-        full_value = [i * self.gauss[0] for i in self.buffer[self.buffermid]]
-        for i in range(self.buffermid):
-            together = together + (2 * self.gauss[i])
-            z = zip(full_value, [j * self.gauss[i] for j in self.buffer[self.buffermid - i]], [j * self.gauss[i] for j in self.buffer[self.buffermid + i]])
-            next_full = []
-            for a,b,c in z:
-                next_full.append(a+b+c)
-            full_value = next_full[:]
-        final = [int(i / together) for i in full_value]
-        for i in range(self.bufferlength-1):
-            self.buffer[self.bufferlength-1-i] = self.buffer[self.bufferlength-2-i]
-        for i in range(3):
-            if(final[i] < 20):
-                final[i] = 0
+        together = 0
+        full_value = []
+        for i in range(self.bufferlength):
+            gaussindex = self.gauss[abs(i-self.buffermid)]
+            if(self.buffer[i][0] > -1):
+                together = together + gaussindex
+                full_value.append((self.buffer[i][0] * gaussindex, 0.5*gaussindex))
+            else:
+                full_value.append((0,0))
+        fin = [0,0]
+        for elm in full_value:
+            fin[0] = fin[0] + elm[0]
+            fin[1] = fin[1] + elm[1]
+        together = max(together, 1)
+        fin[0] = float(fin[0]) / together
+        fin[1] = float(fin[1]) / self.gaussaverage
+        #print(fin)
+        #print("buffer : " + str(self.buffer))
+        if(fin[1] < 0.1):
+            fin[1] = 0
+        final = hls_to_rgb(fin[0], fin[1], 1)
+        final = [i * 255 for i in final]
+        #print("rgb: " + str(final))
         self.obj.content[0] = final
-
+        for i in range(self.bufferlength - 1):
+            self.buffer[self.bufferlength - 1 -i] = self.buffer[self.bufferlength - 2 - i]
 
 
     def onMessage(self):

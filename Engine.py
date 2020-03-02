@@ -39,7 +39,7 @@ def publishState():
             client.publish(topic=subj[0], payload=subj[1])
 
 
-layer = [WaveSpec(),Fading(), Lamp(), MultiSnake(), SpecTrain(),  Alarm()]
+layer = [WaveSpec(),Fading(), Lamp(), MultiSnake(), SpecTrain(),TestEngine(),  Alarm()]
 br = 100
 pixellength = 450
 lastpixel = []

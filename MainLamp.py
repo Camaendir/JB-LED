@@ -189,3 +189,29 @@ class MultiSnake(SubEngine):
 
 def rdm(min, max):
     return int(min + (random() * (max-min)))
+
+class TestEngine(SubEngine):
+
+    def __init__(self):
+        self.build("TestEngine", 450, 1)
+        self.test = Row()
+        self.test.isVisible = True
+        self.test.position = 370
+        self.test.setContent([[255,0,0],[255,255,0]])
+        self.test.stayMirrored(True)
+        self.test.stayRepeated(True,15)
+        self.test.stayLooped(True)
+        self.addObj(self.test)
+        self.isEnabled = False
+
+    def update(self):
+        self.test.shift(pixel=[255,255,255])
+        pass
+
+    def onMessage(self, topic, payload):
+        pass
+
+    def getStates(self):
+        retVal = []
+        retVal.append(["strip/info/TestEngine/enable", str(self.isEnabled)])
+        return retVal
