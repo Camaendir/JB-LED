@@ -5,7 +5,6 @@ import pyaudio
 import struct
 import numpy as np
 import threading
-from scipy.fftpack import fft
 
 from SubEngine import *
 
@@ -19,7 +18,7 @@ class Adapter(threading.Thread):
         self.amp_data = []
 
         self.p = pyaudio.PyAudio()
-        self.chunk = 2048
+        self.chunk = 1024
         self.stream = self.p.open(
             format=pyaudio.paInt16,
             channels=1,
@@ -39,18 +38,21 @@ class Adapter(threading.Thread):
         while self.isEnabled:
             data_raw = struct.unpack(str(2 * self.chunk) + 'B', self.stream.read(self.chunk, exception_on_overflow=False))
             self.amp_data = data_raw[:]
-            data_fft = fft(data_raw)
-            data_fft = map(complex, data_fft)
-            data_fft = map(self.lengthVector, data_fft)
-            self.fft_data = data_fft[0:self.chunk]      
+            print(np.mean(data_raw))
+            data_fft = np.fft.fft(data_raw * np.hanning(len(data_raw)))
+            data_fft = np.abs(data_fft)
+            data_fft = list(data_fft[0:self.chunk])
+            data_fft = map(self.resize, data_fft)
+            self.fft_data = data_fft[:]
+            print([max(data_fft),max(data_raw)])
 
-    def lengthVector(self, num):
-        return math.sqrt(num.real*num.real + num.imag*num.imag)
+    def resize(self, num):
+        return (num*2)/self.chunk
 
 
 class FrSpectrum:
 
-    def __init__(self, output_lenght=450, data_lenght=2048):
+    def __init__(self, output_lenght=450, data_lenght=1024):
         self.output_length = output_lenght
         self.data_length = data_lenght
         self.map = [0] * self.output_length

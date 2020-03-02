@@ -40,7 +40,7 @@ def publishState():
 
 
 layer = [WaveSpec(),Fading(), Lamp(), MultiSnake(), Alarm()]
-br = 255
+br = 100
 pixellength = 450
 lastpixel = []
 
@@ -72,19 +72,19 @@ while True:
                     frame[index] = pixel
                 index = index + 1
     index = 0
-
+    bri = float(br)/100
     for pixelcolor in frame:
-        bri = 255 - br
         for rgb in range(len(pixelcolor)):
-            
             pixelcolor[rgb] = max(pixelcolor[rgb],0)
 
         if pixelcolor is not lastpixel[index]:
             cl = []
             for i in pixelcolor:
-                cl.append(max(i-bri,0)) 
+                cl.append(int(bri*i))
             pixels.setPixel(index, color=cl)
+
         index = index + 1
+    
     pixels.show()
     lastpixel = copy.deepcopy(frame)
     sleep(0.01)
