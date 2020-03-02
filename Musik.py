@@ -14,7 +14,7 @@ class Adapter(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.isEnabled = False
-
+        self.raw_data = []
         self.fft_data = []
         self.amp_data = []
         self.p = pyaudio.PyAudio()
@@ -60,6 +60,7 @@ class Adapter(threading.Thread):
             data_fft = list(data_fft[0:self.chunk])
             data_fft = map(self.resize, data_fft)
             diff = []
+            self.raw_data = data_fft[:]
             zip1 = zip(data_fft, self.offset)
             for a,b in zip1:
                 diff.append(a-b)
@@ -119,6 +120,10 @@ class SpecTrain(SubEngine):
         self.obj.build(True, 0, [[-1,-1,-1]]*450)
         self.addObj(self.obj)
         self.First = 0
+        self.bufferlength = 7
+        self.buffer = [[0,0,0]]*self.bufferlength
+        self.gauss = (41,26,16,7,4,1)
+        self.buffermid = int((self.bufferlength-1)/2)
 
     def getStates(self):
         retVal = []
@@ -135,6 +140,7 @@ class SpecTrain(SubEngine):
         index = data.index(max(data))
         for i in range(449):
             self.obj.content[449-i] = self.obj.content[448-i]
+        frame = [0,0,0]
         if data[index] >= 15:
             print("over")
             val = data[index]
@@ -153,10 +159,28 @@ class SpecTrain(SubEngine):
             bri = float(bri)
             #print("rgb: " + str(hls_to_rgb(hue, bri, 0.5)))
             rgb = hls_to_rgb(hue, 0.5, bri)
-            self.obj.content[0] = [i * 255 for i in rgb]
+            frame = [i * 255 for i in rgb]
         else:
             print(data[index])
-            self.obj.content[0] = [-1, -1, -1]
+        self.buffer[0] = frame
+        together = self.gauss[0]
+        full_value = [i * self.gauss[0] for i in self.buffer[self.buffermid]]
+        for i in range(self.buffermid):
+            together = together + (2 * self.gauss[i])
+            z = zip(full_value, [j * self.gauss[i] for j in self.buffer[self.buffermid - i]], [j * self.gauss[i] for j in self.buffer[self.buffermid + i]])
+            next_full = []
+            for a,b,c in z:
+                next_full.append(a+b+c)
+            full_value = next_full[:]
+        final = [int(i / together) for i in full_value]
+        for i in range(self.bufferlength-1):
+            self.buffer[self.bufferlength-1-i] = self.buffer[self.bufferlength-2-i]
+        for i in range(3):
+            if(final[i] < 20):
+                final[i] = 0
+        self.obj.content[0] = final
+
+
 
     def onMessage(self):
         pass
