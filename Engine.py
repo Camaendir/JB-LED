@@ -1,5 +1,6 @@
 from time import sleep
 import copy
+import multiprocessing
 
 from strip import *
 import paho.mqtt.client as mqtt
@@ -55,15 +56,17 @@ client.subscribe("strip/effekt/#")
 client.subscribe("strip/command")
 client.subscribe("strip/color/#")
 client.loop_start()
-
 publishState()
 
 lastpixel =[[-1,-1,-1]] * pixellength
+
+subFrames = []
 while True:
     frame =[[-1,-1,-1]] * pixellength
+    process = []
     for subengine in layer:
         if subengine.isEnabled:
-            subengine.update()
+            process.append(
             sub_frame = subengine.getFrame()
             
             index = 0

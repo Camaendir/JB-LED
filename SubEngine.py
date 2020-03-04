@@ -47,6 +47,7 @@ class SubEngine:
             layer.delObj(obj)
 
     def getFrame(self):
+        self.update()
         plain = []
         for i in range(self.pixellength):
             plain.append(self.transparent)
@@ -115,16 +116,14 @@ class Row:
 
     #Proccesing
     def shift(self, pixel=[-1, -1, -1]):
-        if len(self.kernelContent)==0:
-            return
+        lastPixel = self.kernelContent[len(self.kernelContent)-1]
+        self.kernelContent.remove(lastPixel)
         if self.isLooped:
-            pixel = self.kernelContent[5]
-            print([len(self.kernelContent)-1])
-        self.kernelContent = self.kernelContent[1:]
-        self.kernelContent.insert(0, pixel)
-        self.kernelContent = self.kernelContent[:-1]
-        self.processing()
-
+            self.kernelContent.insert(0, lastPixel)
+        else:
+            self.kernelContent.insert(0,pixel)
+        
+        
     def processing(self):
         newContent = self.kernelContent[:]
 
@@ -139,4 +138,4 @@ class Row:
 
         #Push to Content
         self.content = newContent
-        print(self.content)
+        

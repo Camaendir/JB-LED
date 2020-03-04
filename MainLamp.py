@@ -197,7 +197,7 @@ class TestEngine(SubEngine):
         self.test = Row()
         self.test.isVisible = True
         self.test.position = 370
-        self.test.setContent([[255,0,0],[255,255,0]])
+        self.test.setContent([[255,0,0],[255,255,0],[0,0,255],[255,0,255]])
         self.test.stayMirrored(True)
         self.test.stayRepeated(True,15)
         self.test.stayLooped(True)
