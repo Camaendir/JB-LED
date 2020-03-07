@@ -80,6 +80,7 @@ class SubEngine:
                 self.isRunning = False
             elif stri.startswith("m:"):
                 mqtt = stri[2:].split("/")
+                self.onMessage(mqtt[0],mqtt[1]
             elif stri == "f":
                 keepgoing = True
         if not keepgoing and self.isRunning:
