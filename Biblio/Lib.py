@@ -1,13 +1,19 @@
 import multiprocessing
 import time
+import strip
+
 
 class Engine:
 
     def __init__(self):
         self.isRunning = False
-        self.brightnis = 100
+        self.brightness = 100
         self.subengines = []
-        self.processes =[]
+        self.processes = []
+        self.frames = {}
+        self.pixels = strip.Strip()
+        self.pixels.create()
+        self.pixels.blackout()
 
     def addSubEngine(self, pSub, pIsEnabled):
         if not self.isRunning:
@@ -18,6 +24,7 @@ class Engine:
         self.isRunning = True
 
         while self.isRunning:
+            frames = [[-1, -1, -1]] * 450
             for row in self.processes:
                 if row[3] and row[2]==None and row[1] == None:
                     self.startSubEngine(row[0])
@@ -25,10 +32,22 @@ class Engine:
                     #self.terminateSubEngine(row[0])
                     pass
                 else:
-                    print(row[2].recv())
-                    row[2].send("")
+                    frame = self.frames[row[0]]
+                    if row[2].poll():
+                        frame = row[2].recv()
+                        self.frames[row[0]] = frame
+                        row[2].send("")
+                    for i in range(len(frames)):
+                        if frames[i] == [-1, -1, -1]:
+                            frames[i] = frame[i]
+            for i in range(len(frames)):
+                for a in frames[i]:
+                    a = max(0, a)
+                self.pixels.setPixel(i, frames[i])
+            self.pixels.show()
             time.sleep(1)
         self.terminate()
+
 
     def startSubEngine(self, pMqttTopic):
         if self.isRunning: #[pSub.mqttTopic, process, parent, True]
@@ -37,10 +56,8 @@ class Engine:
                 if sub.mqttTopic == pMqttTopic:
                     newSub = sub
                     break
-
             if newSub == None:
                 return
-
             parent, child = multiprocessing.Pipe()
             process = multiprocessing.Process(target=newSub.run)
             newSub.configur(child)
@@ -51,6 +68,7 @@ class Engine:
                     row[3] = True
                     break
             process.start()
+            self.frames[pMqttTopic] = ([[-1, -1, -1]]*450)
 
     def terminateSubEngine(self, pMqttTopic):
         for row in self.processes:
@@ -78,6 +96,7 @@ class Engine:
             row[1] = None
             row[2] = None
         print("Done!")
+
 
 class SubEngine:
 
@@ -166,14 +185,14 @@ class Object:
 
 class Test(SubEngine):
 
-    def __init__(self):
-        self.build("Test",450,3)
+    def __init__(self, mqtt):
+        self.build(mqtt,450,3)
         self.obj = Object()
         self.obj.build(True,0,[[255,255,255]]*450)
         self.addObj(self.obj,2)
 
     def update(self):
-        if self.obj.content[0]==[0,0,0]:
+        if self.obj.content[0] == [0,0,0]:
             self.obj.content = [[255,255,255]]*450
         else:
             self.obj.content = [[0,0,0]]*450
@@ -186,34 +205,35 @@ def compFrame(pFrame):
     for pixel in pFrame:
         if lastPixel == pixel:
             if currentBlock >= 254:
-                block.append([lastPixel, currentBlock])
+                block.append([currentBlock, lastPixel])
                 currentBlock = 0
             else:
                 currentBlock = currentBlock + 1
         else:
-            block.append([lastPixel,currentBlock])
+            block.append([currentBlock,lastPixel])
             currentBlock = 0
             lastPixel = pixel
-    block.append([lastPixel,currentBlock])
+    block.append([currentBlock,lastPixel])
     retVal = []
     for b in block:
         retVal = rowToBits(b)
     return retVal
 
+
 def rowToBits(pRow):
     if pRow[1] == [-1, -1, -1]:
         retVal = (255 << 24) + pRow[0]
     else:
-        retVal = (pRow[0] << 24) + (pRow[1][0] << 16) + (pRow[1][1] << 8) +pRow[1][2]
+        retVal = (pRow[0] << 24) + (pRow[1][0] << 16) + (pRow[1][1] << 8) + pRow[1][2]
     return retVal
+
 
 def bitToRow(pBits):
     retVal = [0, [0, 0, 0]]
     retVal[0] = (pBits & 4278190080) >> 24
     if retVal[0] == 255:
         retVal[0] = pBits & 255
-        retVal[1] = [-1,-1,-1]
-
+        retVal[1] = [-1, -1, -1]
     else:
         retVal[1][0] = (pBits & 16711680) >> 16
         retVal[1][1] = (pBits & 65280) >> 8
@@ -221,19 +241,21 @@ def bitToRow(pBits):
     return retVal
 
 
-
-
-
 if __name__ == '__main__':
-    if not True:
+    if True:
         eng = Engine()
-        t = Test()
-        for _ in range(10):
-            eng.addSubEngine(t, True)
-            eng.startSubEngine("Test")
+        t = Test('abc')
+        c = Test('def')
+        d = Test('adf')
+        eng.addSubEngine(t, True)
+        eng.addSubEngine(c, True)
+        eng.addSubEngine(d, True)
+        #eng.startSubEngine("adf")
+        #eng.startSubEngine("abc")
+        #eng.startSubEngine("def")
         eng.run()
 
-    elif  True:
+    elif True:
         testFrame = [[255,255,255]]*20+[[0,0,0]]*16+[[-1, -1, -1]]*12000
         print(testFrame)
         print(compFrame(testFrame))
