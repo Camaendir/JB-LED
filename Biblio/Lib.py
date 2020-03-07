@@ -36,7 +36,7 @@ class Engine:
                     if row[2].poll():
                         frame = row[2].recv()
                         self.frames[row[0]] = frame
-                        row[2].send("")
+                        row[2].send("f")
                     for i in range(len(frames)):
                         if frames[i] == [-1, -1, -1]:
                             frames[i] = frame[i]
@@ -145,11 +145,16 @@ class SubEngine:
         buff.append(self.pipe.recv())
         while self.pipe.poll():
             buff.append(self.pipe.recv())
+        keepgoing = False
         for stri in buff:
             if stri =="t":
                 self.isRunning = False
             elif stri.startswith("m:"):
                 mqtt = stri[2:].split("/")
+            elif stri == "f":
+                keepgoing = True
+        if not keepgoing:
+            self.controller()
         
 
 
