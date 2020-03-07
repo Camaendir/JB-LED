@@ -66,7 +66,7 @@ class Engine:
                 elif row[3]:
                     frame = self.frames[row[0]]
                     if row[2].poll():
-                        frame = row[2].recv()
+                        frame = self.decompFrame(row[2].recv())
                         self.frames[row[0]] = frame
                         row[2].send("f")
                     for i in range(len(frames)):
@@ -78,11 +78,29 @@ class Engine:
                     color.append(max(0, a))
                 self.pixels.setPixel(i, color=color)
             self.pixels.show()
-            time.sleep(1)
+            #time.sleep(1)
         self.terminate()
 
-    def terminate(self):
-        pass
+    def bitToRow(self, pBits):
+        retVal = [0, [0, 0, 0]]
+        retVal[0] = (pBits & 4278190080) >> 24
+        if retVal[0] == 255:
+            retVal[0] = pBits & 255
+            retVal[1] = [-1,-1,-1]
+        else:
+            retVal[1][0] = (pBits & 16711680) >> 16
+            retVal[1][1] = (pBits & 65280) >> 8
+            retVal[1][2] = pBits & 255
+        return retVal
+
+    def decompFrame(self, pFrame):
+        block = []
+        for data in pFrame:
+            block.append(self.bitToRow(data))
+        retVal = []
+        for row in block:
+            retVal = retVal + [row[1]]*(row[0]+1)
+        return retVal
 
     def startSubEngine(self, pMqttTopic):
         if self.isRunning: #[pSub.mqttTopic, process, parent, True]
