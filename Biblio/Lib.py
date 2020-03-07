@@ -1,7 +1,7 @@
 import multiprocessing
 import time
 import strip
-
+import paho.mqtt.client as mqtt
 
 class Engine:
 
@@ -14,6 +14,37 @@ class Engine:
         self.pixels = strip.Strip()
         self.pixels.create()
         self.pixels.blackout()
+
+        self.client = mqtt.Client()
+        self.client.on_message = self.on_message
+        self.client.connect("localhost", 1883, 60)
+        self.client.subscribe("strip/effekt/#")
+        self.client.subscribe("strip/command")
+        self.client.subscribe("strip/color/#")
+        self.client.loop_start()
+
+    def on_message(self, client, userdata, msg):
+        global br
+        topic = msg.topic
+        print([msg.topic, msg.payload])
+        if topic == "strip/command":
+            if msg.payload == "update":
+                pass
+            elif msg.payload == "reset":
+                pixels.blackout()
+        elif topic.startswith("strip/color/"):
+            topic = topic[12:]
+            if topic == "brightnis":
+                br = int(msg.payload)
+        elif topic.startswith("strip/effekt/"):
+            topic = topic[13:]
+            for row in self.processes:
+                if topic.startswith(row[0]+"/"):
+                    topic = topic[len(row[0])+1:]
+                    if topic == "enable":
+                        row[3] = msg.payload.lower() in ("true", "t", "1", "on")
+                    elif row[2] != None:
+                        row[2].send("m:"+topic+"/"+msg.payload)
 
     def addSubEngine(self, pSub, pIsEnabled):
         if not self.isRunning:
@@ -29,9 +60,9 @@ class Engine:
                 if row[3] and row[2]==None and row[1] == None:
                     self.startSubEngine(row[0])
                 elif not row[3] and row[2] != None and row[1] != None:
-                    #self.terminateSubEngine(row[0])
+                    self.terminateSubEngine(row[0])
                     pass
-                else:
+                elif row[3]:
                     frame = self.frames[row[0]]
                     if row[2].poll():
                         frame = row[2].recv()
@@ -79,7 +110,7 @@ class Engine:
                 print("Joining Process...")
                 row[1].join()
                 print("Done!")
-                row[2].unlink()
+                row[2].close()
                 row[1] = None
                 row[2] = None
                 row[3] = False
@@ -93,7 +124,7 @@ class Engine:
         for row in self.processes:
             print("Join Process...")
             row[1].join()
-            row[2].unlink()
+            row[2].close()
             row[1] = None
             row[2] = None
         print("Done!")
@@ -153,8 +184,8 @@ class SubEngine:
                 mqtt = stri[2:].split("/")
             elif stri == "f":
                 keepgoing = True
-        if not keepgoing:
-            self.controller()
+        if not keepgoing and self.isRunning:
+            self.controler()
         
 
 
@@ -259,8 +290,8 @@ if __name__ == '__main__':
         c = Test('def')
         d = Test('adf')
         eng.addSubEngine(t, True)
-        eng.addSubEngine(c, True)
-        eng.addSubEngine(d, True)
+        #eng.addSubEngine(c, True)
+        #eng.addSubEngine(d, True)
         #eng.startSubEngine("adf")
         #eng.startSubEngine("abc")
         #eng.startSubEngine("def")
