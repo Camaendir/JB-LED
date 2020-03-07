@@ -41,9 +41,10 @@ class Engine:
                         if frames[i] == [-1, -1, -1]:
                             frames[i] = frame[i]
             for i in range(len(frames)):
+                color = []
                 for a in frames[i]:
-                    a = max(0, a)
-                self.pixels.setPixel(i, frames[i])
+                    color.append(max(0, a))
+                self.pixels.setPixel(i, color=color)
             self.pixels.show()
             time.sleep(1)
         self.terminate()
@@ -198,47 +199,47 @@ class Test(SubEngine):
             self.obj.content = [[0,0,0]]*450
 
 
-def compFrame(pFrame):
-    block = []
-    currentBlock = 0
-    lastPixel = pFrame.pop(0)
-    for pixel in pFrame:
-        if lastPixel == pixel:
-            if currentBlock >= 254:
-                block.append([currentBlock, lastPixel])
-                currentBlock = 0
-            else:
-                currentBlock = currentBlock + 1
-        else:
-            block.append([currentBlock,lastPixel])
-            currentBlock = 0
-            lastPixel = pixel
-    block.append([currentBlock,lastPixel])
-    retVal = []
-    for b in block:
-        retVal = rowToBits(b)
-    return retVal
+#def compFrame(pFrame):
+#    block = []
+#    currentBlock = 0
+#    lastPixel = pFrame.pop(0)
+#    for pixel in pFrame:
+#        if lastPixel == pixel:
+#            if currentBlock >= 254:
+#                block.append([currentBlock, lastPixel])
+#                currentBlock = 0
+#            else:
+#                currentBlock = currentBlock + 1
+#        else:
+#            block.append([currentBlock,lastPixel])
+#            currentBlock = 0
+#            lastPixel = pixel
+#    block.append([currentBlock,lastPixel])
+#    retVal = []
+#    for b in block:
+#        retVal = rowToBits(b)
+#    return retVal
 
 
-def rowToBits(pRow):
-    if pRow[1] == [-1, -1, -1]:
-        retVal = (255 << 24) + pRow[0]
-    else:
-        retVal = (pRow[0] << 24) + (pRow[1][0] << 16) + (pRow[1][1] << 8) + pRow[1][2]
-    return retVal
+#def rowToBits(pRow):
+#    if pRow[1] == [-1, -1, -1]:
+#        retVal = (255 << 24) + pRow[0]
+#    else:
+#        retVal = (pRow[0] << 24) + (pRow[1][0] << 16) + (pRow[1][1] << 8) + pRow[1][2]
+#    return retVal
 
 
-def bitToRow(pBits):
-    retVal = [0, [0, 0, 0]]
-    retVal[0] = (pBits & 4278190080) >> 24
-    if retVal[0] == 255:
-        retVal[0] = pBits & 255
-        retVal[1] = [-1, -1, -1]
-    else:
-        retVal[1][0] = (pBits & 16711680) >> 16
-        retVal[1][1] = (pBits & 65280) >> 8
-        retVal[1][2] = pBits & 255
-    return retVal
+#def bitToRow(pBits):
+#    retVal = [0, [0, 0, 0]]
+#    retVal[0] = (pBits & 4278190080) >> 24
+#    if retVal[0] == 255:
+#        retVal[0] = pBits & 255
+#        retVal[1] = [-1, -1, -1]
+#    else:
+#        retVal[1][0] = (pBits & 16711680) >> 16
+#        retVal[1][1] = (pBits & 65280) >> 8
+#        retVal[1][2] = pBits & 255
+#    return retVal
 
 
 if __name__ == '__main__':
