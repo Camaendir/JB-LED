@@ -1,5 +1,6 @@
 import math
-from SubEngine import *
+from Lib.SubEngine import *
+from Lib.Object import *
 
 from math import floor
 from random import random

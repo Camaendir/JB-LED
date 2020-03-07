@@ -1,15 +1,14 @@
 class Panel:
-    global transparent
 
-    def __init__(self):i
-        transparent = [-1 ,-1 ,-1]
-        self.position = 0;
+    def __init__(self):
+        self.transparent = [-1 ,-1 ,-1]
+        self.position = 0
         self.isVisible = False
         self.content = []
 
         self.kernelContent = []
 
-        self.isMirrowed = False
+        self.isMirrored = False
         self.isLooped = False
         self.isRepeated = False
         self.repeats = 0
@@ -19,7 +18,7 @@ class Panel:
         self.processing()
 
     def stayMirrored(self, pBoolean):
-        self.isMirrowed = pBoolean
+        self.isMirrored = pBoolean
         self.processing()
 
     def stayRepeated(self, pBoolean, pNum):
@@ -35,7 +34,7 @@ class Panel:
         self.isLooped = pBoolean
         self.processing()
 
-    def shift(self, pixel=transparent):
+    def shift(self, pixel=[-1,-1,-1]):
         lastPixel = self.kernelContent[len(self.kernelContent) - 1]
         self.kernelContent.remove(lastPixel)
         if self.isLooped:
@@ -55,7 +54,7 @@ class Panel:
         newContent = self.kernelContent[:]
 
         # Mirror
-        if self.isMirrowed:
+        if self.isMirrored:
             for i in range(len(self.kernelContent) - 1, -1, -1):
                 newContent.append(self.kernelContent[i])
 

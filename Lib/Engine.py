@@ -50,12 +50,13 @@ class Engine:
     def addSubEngine(self, pSub, pIsEnabled):
         if not self.isRunning:
             self.subengines.append(pSub)
-            self.processes.append([pSub.mqttTopic, None, None, pIsEnabled])
+            self.processes.append([pSub.mqttTopic, None, None, pIsEnabled, pSub.isCompressed])
 
     def run(self):
         self.isRunning = True
 
         while self.isRunning:
+            fr = time.clock()
             frames = [[-1, -1, -1]] * 450
             for row in self.processes:
                 if row[3] and row[2]==None and row[1] == None:
@@ -66,7 +67,10 @@ class Engine:
                 elif row[3]:
                     frame = self.frames[row[0]]
                     if row[2].poll():
-                        frame = self.decompFrame(row[2].recv())
+                        if row[4]:
+                            frame = self.decompFrame(row[2].recv())
+                        else:
+                            frame = row[2].recv()
                         self.frames[row[0]] = frame
                         row[2].send("f")
                     for i in range(len(frames)):
@@ -77,6 +81,7 @@ class Engine:
                 for a in frames[i]:
                     color.append(max(0, a))
                 self.pixels.setPixel(i, color=color)
+            fr = time.clock()
             self.pixels.show()
             #time.sleep(1)
         self.terminate()

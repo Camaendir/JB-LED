@@ -6,8 +6,9 @@ import struct
 import numpy as np
 import threading
 from colorsys import hls_to_rgb
-
-from SubEngine import *
+import time
+from Lib.SubEngine import *
+from Lib.Object import Object
 
 class Adapter(threading.Thread):
 
@@ -38,10 +39,12 @@ class Adapter(threading.Thread):
     def run(self):
         self.isEnabled = True
         print("Bitte leise sein")
-        for i in range(200):
+        for i in range(50):
             raw = struct.unpack(str(2*self.chunk)+ 'B', self.stream.read(self.chunk, exception_on_overflow=False))
+            print("it works")
             ad = raw[:]
             fft = np.fft.fft(raw)
+            print("see")
             fft = np.abs(fft)
             fft = list(fft[0:self.chunk])
             fft = map(self.resize, fft)
@@ -115,6 +118,10 @@ class FrSpectrum:
 class SpecTrain(SubEngine):
 
     def __init__(self):
+        self.adapter = Adapter()
+        self.shift = 180
+        self.adapter.daemon = True
+        self.stated = False
         self.build("Train" ,450, 1)
         self.obj = Object()
         self.obj.build(True, 0, [[-1,-1,-1]]*450)
@@ -134,8 +141,11 @@ class SpecTrain(SubEngine):
         return retVal
 
     def update(self):
-        global adapter
-        data = adapter.fft_data[:]
+        if not self.stated:
+            self.adapter.start()
+            time.sleep(7)
+            self.stated = True
+        data = self.adapter.fft_data[:]
         data = data[10:30]
         index = data.index(max(data))
         for i in range(449):
@@ -176,8 +186,8 @@ class SpecTrain(SubEngine):
         #print("buffer : " + str(self.buffer))
         if(fin[1] < 0.1):
             fin[1] = 0
-        final = hls_to_rgb(fin[0], fin[1], 1)
-        final = [i * 255 for i in final]
+        final = hls_to_rgb((fin[0] + self.shift) % 360, fin[1], 1)
+        final = [int(i * 255) for i in final]
         #print("rgb: " + str(final))
         self.obj.content[0] = final
         for i in range(self.bufferlength - 1):
@@ -270,8 +280,3 @@ class SnakeVibe(SubEngine):
         return retVal
 
 
-
-global adapter
-adapter = Adapter()
-adapter.daemon = True
-adapter.start()
