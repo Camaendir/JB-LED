@@ -9,7 +9,7 @@ global pixellength
 pixellength = 450 
 
 
-class Panel(Object):
+class Background(Object):
     def __init__(self):
         self.color = [ 0, 0, 0]
         self.build(True, pixellength -1, [self.color] * pixellength)
@@ -26,7 +26,7 @@ class Fading(SubEngine):
         self.index = 0
         self.build("Fading",449, 5)
 
-        self.p = Panel()
+        self.p = Background()
         self.addObj(self.p)
 
 
@@ -60,7 +60,7 @@ class Lamp(SubEngine):
     def __init__(self):
         self.build("Lamp", pixellength ,1)
         self.rgb = [255, 135, 0]
-        self.p = Panel()
+        self.p = Background()
         self.addObj(self.p)
         self.isEnabled = False
 
@@ -195,7 +195,7 @@ class TestEngine(SubEngine):
 
     def __init__(self):
         self.build("TestEngine", 450, 1)
-        self.test = Row()
+        self.test = Panel()
         self.test.isVisible = True
         self.test.position = 370
         self.test.setContent([[255,0,0],[255,255,0],[0,0,255],[255,0,255]])

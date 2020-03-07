@@ -3,7 +3,7 @@ class Panel:
     def __init__(self):
         self.transparent = [-1 ,-1 ,-1]
         self.position = 0
-        self.isVisible = False
+        self.isVisible = True 
         self.content = []
 
         self.kernelContent = []
@@ -35,12 +35,13 @@ class Panel:
         self.processing()
 
     def shift(self, pixel=[-1,-1,-1]):
-        lastPixel = self.kernelContent[len(self.kernelContent) - 1]
-        self.kernelContent.remove(lastPixel)
+        #lastPixel = self.kernelContent[len(self.kernelContent) - 1]
+        lastPixel = self.kernelContent.pop()
         if self.isLooped:
             self.kernelContent.insert(0, lastPixel)
         else:
             self.kernelContent.insert(0, pixel)
+        self.processing()
 
     def insert(self, index, pixel):
         self.kernelContent.insert(index, pixel)

@@ -9,6 +9,7 @@ from colorsys import hls_to_rgb
 import time
 from Lib.SubEngine import *
 from Lib.Object import Object
+from Lib.Panel import Panel
 
 class Adapter(threading.Thread):
 
@@ -123,8 +124,11 @@ class SpecTrain(SubEngine):
         self.adapter.daemon = True
         self.stated = False
         self.build("Train" ,450, 1)
-        self.obj = Object()
-        self.obj.build(True, 0, [[-1,-1,-1]]*450)
+        self.obj = Panel()
+        self.obj.stayMirrored(True)
+        self.obj.position = 245
+        self.obj.setContent([[0,0,0]]*225)
+        #self.obj.build(True, 0, [[-1,-1,-1]]*450)
         self.addObj(self.obj)
         self.First = 0
         self.bufferlength = 11
@@ -148,8 +152,6 @@ class SpecTrain(SubEngine):
         data = self.adapter.fft_data[:]
         data = data[10:30]
         index = data.index(max(data))
-        for i in range(449):
-            self.obj.content[449-i] = self.obj.content[448-i]
         frame = [-1,0]
         if data[index] >= 15:
             #print("over")
@@ -188,8 +190,7 @@ class SpecTrain(SubEngine):
             fin[1] = 0
         final = hls_to_rgb((fin[0] + self.shift) % 360, fin[1], 1)
         final = [int(i * 255) for i in final]
-        #print("rgb: " + str(final))
-        self.obj.content[0] = final
+        self.obj.shift(final)
         for i in range(self.bufferlength - 1):
             self.buffer[self.bufferlength - 1 -i] = self.buffer[self.bufferlength - 2 - i]
 
@@ -244,39 +245,5 @@ class WaveSpec(SubEngine):
 
             self.obj.content[i]= self.colors[int(data[i]/30)]
 
-class Pulse(Object):
-
-    def __init__(self):
-        self.build(True,370,[])
-        print(self.isVisible)
-
-    def setColor(self, color, rate):
-        self.content = []
-        for i in range(rate):
-            self.content.append(color[:])
-            self.content.insert(0, color[:])
-
-
-
-
-
-class SnakeVibe(SubEngine):
-
-    def __init__(self):
-        self.build("SnakeVibe", 450, 1)
-        self.pulse = Pulse()
-        self.addObj(Pulse)
-        self.isEnabled = True
-
-    def update(self):
-        pass
-    
-    def onMessage(self, topic, payload):
-        pass
-
-    def getStates(self):
-        retVal = []
-        retVal.append(["strip/info/SnakeVibe/enable", str(self.isEnabled)])
-        return retVal
 
 
