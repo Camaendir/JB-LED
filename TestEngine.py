@@ -1,6 +1,6 @@
-from Biblio.Engine import Engine
-from Biblio.SubEngine import SubEngine
-from Biblio.Object import Object
+from Lib.Engine import Engine
+from Lib.SubEngine import SubEngine
+from Lib.Object import Object
 
 class Test(SubEngine):
 
