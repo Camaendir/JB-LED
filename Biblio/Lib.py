@@ -141,11 +141,16 @@ class SubEngine:
             self.controler()
 
     def controler(self):
-        str = self.pipe.recv()
-        if str =="t":
-            self.isRunning = False
-        elif str.startswith("m:"):
-            mqtt = str[2:].split("/")
+        buff = []
+        buff.append(self.pipe.recv())
+        while self.pipe.poll():
+            buff.append(self.pipe.recv())
+        for stri in buff:
+            if stri =="t":
+                self.isRunning = False
+            elif stri.startswith("m:"):
+                mqtt = stri[2:].split("/")
+        
 
 
 class Layer:
