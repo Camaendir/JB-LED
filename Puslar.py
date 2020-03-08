@@ -42,7 +42,7 @@ class Pulsar(SubEngine):
         for i in range(self.layercount):
             max_data = max(fftdata[self.frequencies[i][0]:self.frequencies[i][1]])
             # Needs tweaking
-            width = self.min_width[i] + self.deflection[i] * max_data
+            width = self.min_width[i] + (self.deflection[i] - (self.last[i]/100)) * max_data
             self.objects[i].update(width)
             if not self.started:
                 self.last[i] = width
