@@ -32,7 +32,7 @@ if __name__ == '__main__':
     #eng.addSubEngine(Test('abc'), True)
     eng.addSubEngine(Alarm(), False)
     eng.addSubEngine(MultiSnake(), False)
-    eng.addSubEngine(Pulsar(), False)
+    eng.addSubEngine(Pulsar(), True)
     #spec = SpecTrain()
     #spec.isCompressed = True 
     #eng.addSubEngine(spec, False)

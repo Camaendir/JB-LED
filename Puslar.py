@@ -21,6 +21,9 @@ class Pulsar(SubEngine):
         self.min_width = min_width
         self.meteor_line = meteor_pro_width
         self.deflection = deflection
+        self.lasting = []
+        for defl in min_width:
+            self.lasting.append([defl]*3)
         #self.METEORS = []
         #for i in range(10):
             #self.METEORS.append(Meteor())
@@ -43,10 +46,10 @@ class Pulsar(SubEngine):
             max_data = max(fftdata[self.frequencies[i][0]:self.frequencies[i][1]])
             # Needs tweaking
             width = self.min_width[i] + (self.deflection[i] - (self.last[i]/100)) * max_data
-            self.objects[i].update(width)
             if not self.started:
                 self.last[i] = width
             width = min(width, self.last[i] + 10)
+            self.objects[i].update(width)
             if width > self.max_width[i] or width > (self.last[i] * (100+self.meteor_line)/100):
                 #self.METEOR(i, width, width - self.last[i])
                 print("Meteor")
