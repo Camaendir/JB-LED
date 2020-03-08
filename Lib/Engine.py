@@ -56,7 +56,7 @@ class Engine:
         self.isRunning = True
 
         while self.isRunning:
-            fr = time.clock()
+            #fr = time.clock()
             frames = [[-1, -1, -1]] * 450
             for row in self.processes:
                 if row[3] and row[2]==None and row[1] == None:
@@ -81,9 +81,9 @@ class Engine:
                 for a in frames[i]:
                     color.append(max(0, a))
                 self.pixels.setPixel(i, color=color)
-            fr = time.clock()
+            #fr = time.clock()
             self.pixels.show()
-            time.sleep(0.05)
+            #time.sleep(0.05)
         self.terminate()
 
     def bitToRow(self, pBits):

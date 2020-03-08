@@ -35,10 +35,8 @@ class Adapter(threading.Thread):
         print("Bitte leise sein")
         for i in range(200):
             raw = struct.unpack(str(2*self.chunk)+ 'B', self.stream.read(self.chunk, exception_on_overflow=False))
-            print("it works")
             ad = raw[:]
             fft = np.fft.fft(raw)
-            print("see")
             fft = np.abs(fft)
             fft = list(fft[0:self.chunk])
             fft = map(self.resize, fft)

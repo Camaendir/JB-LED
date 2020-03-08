@@ -45,22 +45,23 @@ class Pulsar(SubEngine):
         for i in range(self.layercount):
             max_data = max(fftdata[self.frequencies[i][0]:self.frequencies[i][1]])
             # Needs tweaking
-            width = self.min_width[i] + (self.deflection[i] - (self.last[i]/100)) * max_data
+            width = min(self.min_width[i] + (self.deflection[i] - (self.last[i]/100)) * max_data, self.max_width[i])
             if not self.started:
                 self.last[i] = width
+            sum = width
+            for a in self.lasting[i]:
+                sum = sum + a[0]
+            avg = sum / (len(self.lasting[i]) + 1)
+            width = avg
+            for j in range(len(self.lasting[i]) - 1):
+                self.lasting[i][j + 1][0] = self.lasting[i][j][0]
             if width > self.last[i] + self.escapevelocity[i]:
                 auslenkung = width
                 speed = width - self.last[i]
                 print("Meteor" + str(i))
             else:
                 width = min(width, self.last[i] + 10)
-                sum = width
-                for a in self.lasting[i]:
-                    sum = sum + a[0]
-                avg = sum/(len(self.lasting[i]) + 1)
-                width = avg
-                for j in range(len(self.lasting[i]) - 1):
-                    self.lasting[i][j + 1][0] = self.lasting[i][j][0]
+
             self.lasting[i][0][0] = width
             self.last[i] = width
             self.objects[i].update(width)
