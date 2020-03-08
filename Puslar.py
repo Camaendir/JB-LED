@@ -5,7 +5,7 @@ import time
 
 class Pulsar(SubEngine):
 
-    def __init__(self, basefreqs=((10,15), (15,25), (25,35)), basecolors=((255,0,0), (0,255,0), (0,0,255)), middle=190, min_width=(50,25,2), max_width=(200, 120, 50), meteor_pro_width=7, deflection=(2,1,0.5)):
+    def __init__(self, basefreqs=((10,15), (15,25), (25,35)), basecolors=((255,0,0), (0,255,0), (0,0,255)), middle=190, min_width=(50,25,2), max_width=(200, 120, 50), deflection=(2,1,0.5), escape_velocity=(40, 20, 10)):
         if len(basefreqs) is not len(basecolors) or len(min_width) is not len(max_width) or len(max_width) is not len(deflection) or len(deflection) is not len(basecolors):
             print("Array sizes not matching")
             return
@@ -19,8 +19,8 @@ class Pulsar(SubEngine):
         self.frequencies = basefreqs
         self.max_width = max_width
         self.min_width = min_width
-        self.meteor_line = meteor_pro_width
         self.deflection = deflection
+        self.escapevelocity = escape_velocity
         self.lasting = []
         for defl in min_width:
             self.lasting.append([defl]*3)
@@ -48,11 +48,19 @@ class Pulsar(SubEngine):
             width = self.min_width[i] + (self.deflection[i] - (self.last[i]/100)) * max_data
             if not self.started:
                 self.last[i] = width
-            width = min(width, self.last[i] + 10)
-            self.objects[i].update(width)
-            if width > self.max_width[i] or width > (self.last[i] * (100+self.meteor_line)/100):
-                #self.METEOR(i, width, width - self.last[i])
+            if width > self.last[i] + self.escapevelocity[i]:
                 print("Meteor")
+            else:
+                width = min(width, self.last[i] + 10)
+                sum = width
+                for a in self.lasting[i]:
+                    sum = sum + a
+                avg = sum/(len(self.lasting[i]) + 1)
+                width = avg
+                for j in range(len(self.lasting[i]) - 1):
+                    self.lasting[i][j + 1] = self.lasting[i][j]
+                self.lasting[0] = width
+            self.objects[i].update(width)
             self.last[i] = width
         if not self.started:
             self.started = True
