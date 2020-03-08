@@ -23,7 +23,7 @@ class Pulsar(SubEngine):
         self.escapevelocity = escape_velocity
         self.lasting = []
         for defl in min_width:
-            self.lasting.append([defl]*3)
+            self.lasting.append([[defl]*3])
         #self.METEORS = []
         #for i in range(10):
             #self.METEORS.append(Meteor())
