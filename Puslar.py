@@ -49,19 +49,21 @@ class Pulsar(SubEngine):
             if not self.started:
                 self.last[i] = width
             if width > self.last[i] + self.escapevelocity[i]:
+                auslenkung = width
+                speed = width - self.last[i]
                 print("Meteor")
             else:
                 width = min(width, self.last[i] + 10)
                 sum = width
                 for a in self.lasting[i]:
-                    sum = sum + a
+                    sum = sum + a[0]
                 avg = sum/(len(self.lasting[i]) + 1)
                 width = avg
                 for j in range(len(self.lasting[i]) - 1):
-                    self.lasting[i][j + 1] = self.lasting[i][j]
-                self.lasting[0] = width
-            self.objects[i].update(width)
+                    self.lasting[i][j + 1][0] = self.lasting[i][j][0]
+            self.lasting[i][0][0] = width
             self.last[i] = width
+            self.objects[i].update(width)
         if not self.started:
             self.started = True
 
