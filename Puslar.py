@@ -46,10 +46,11 @@ class Pulsar(SubEngine):
             self.objects[i].update(width)
             if not self.started:
                 self.last[i] = width
+            width = min(width, self.last[i] + 20)
             if width > self.max_width[i] or width > (self.last[i] * (100+self.meteor_line)/100):
                 #self.METEOR(i, width, width - self.last[i])
                 print("Meteor")
-
+            self.last[i] = width
         if not self.started:
             self.started = True
 
