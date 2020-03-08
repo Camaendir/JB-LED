@@ -5,7 +5,7 @@ import time
 
 class Pulsar(SubEngine):
 
-    def __init__(self, basefreqs=((10,13), (15,25), (30,35)), basecolors=((0,0,255), (0,255,0), (255,0,0)), middle=190, min_width=(50,30,20), max_width=(160, 120, 80), deflection=(2,1,0.5), escape_velocity=(60, 30, 15)):
+    def __init__(self, basefreqs=((8,15), (15,25), (30,35)), basecolors=((0,0,255), (0,255,0), (255,0,0)), middle=190, min_width=(50,30,20), max_width=(160, 120, 80), deflection=(4,2,1), escape_velocity=(60, 30, 15)):
         if len(basefreqs) is not len(basecolors) or len(min_width) is not len(max_width) or len(max_width) is not len(deflection) or len(deflection) is not len(basecolors):
             print("Array sizes not matching")
             return
@@ -22,6 +22,7 @@ class Pulsar(SubEngine):
         self.deflection = deflection
         self.escapevelocity = escape_velocity
         self.lasting = []
+        self.position = middle
         for defl in min_width:
             self.lasting.append([[defl]*3])
         #self.METEORS = []
@@ -42,8 +43,13 @@ class Pulsar(SubEngine):
             self.adapter.start()
             time.sleep(7)
         fftdata = self.getFFTData()
+        sum_fft = 0
+        for a in fftdata:
+            sum_fft = sum_fft + a
+        avg_fft = sum_fft / len(fftdata)
         for i in range(self.layercount):
             max_data = max(fftdata[self.frequencies[i][0]:self.frequencies[i][1]])
+            max_data = max_data - avg_fft
             # Needs tweaking
             width = min(self.min_width[i] + (self.deflection[i] - (self.last[i]/100)) * max_data, self.max_width[i])
             if not self.started:
@@ -56,8 +62,9 @@ class Pulsar(SubEngine):
             for j in range(len(self.lasting[i]) - 1):
                 self.lasting[i][j + 1][0] = self.lasting[i][j][0]
             if width > self.last[i] + self.escapevelocity[i]:
-                auslenkung = width
+                auslenkung = width - (self.escapevelocity[i]/2)
                 speed = width - self.last[i]
+                width = width - (self.escapevelocity[i] / 2)
                 print("Meteor" + str(i))
             else:
                 width = min(width, self.last[i] + 10)
