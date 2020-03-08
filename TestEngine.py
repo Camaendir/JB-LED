@@ -4,6 +4,8 @@ from Lib.Panel import Panel
 
 from MainLamp import *
 from Musik import SpecTrain
+from Puslar import Pulsar
+
 
 class Test(SubEngine):
 
@@ -27,9 +29,10 @@ class Test(SubEngine):
 
 if __name__ == '__main__':
     eng = Engine()
-    eng.addSubEngine(Test('abc'), True)
+    #eng.addSubEngine(Test('abc'), True)
     eng.addSubEngine(Alarm(), False)
     eng.addSubEngine(MultiSnake(), False)
+    eng.addSubEngine(Pulsar(), False)
     #spec = SpecTrain()
     #spec.isCompressed = True 
     #eng.addSubEngine(spec, False)

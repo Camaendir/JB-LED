@@ -21,9 +21,9 @@ class Pulsar(SubEngine):
         self.min_width = min_width
         self.meteor_line = meteor_pro_width
         self.deflection = deflection
-        self.METEORS = []
-        for i in range(10):
-            self.METEORS.append(Meteor())
+        #self.METEORS = []
+        #for i in range(10):
+            #self.METEORS.append(Meteor())
         self.last = [0] * self.layercount
         for i in range(self.layercount):
             Obj = Pusle(middle, basecolors[i])
