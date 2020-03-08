@@ -40,7 +40,7 @@ class Pulsar(SubEngine):
     def update(self):
         if not self.started:
             self.adapter.start()
-            time.sleep(5)
+            time.sleep(7)
         fftdata = self.getFFTData()
         for i in range(self.layercount):
             max_data = max(fftdata[self.frequencies[i][0]:self.frequencies[i][1]])

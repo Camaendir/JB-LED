@@ -33,7 +33,7 @@ class Adapter(threading.Thread):
     def run(self):
         self.isEnabled = True
         print("Bitte leise sein")
-        for i in range(50):
+        for i in range(200):
             raw = struct.unpack(str(2*self.chunk)+ 'B', self.stream.read(self.chunk, exception_on_overflow=False))
             print("it works")
             ad = raw[:]
