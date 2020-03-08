@@ -83,7 +83,7 @@ class Engine:
                 self.pixels.setPixel(i, color=color)
             fr = time.clock()
             self.pixels.show()
-            #time.sleep(0.05)
+            time.sleep(0.05)
         self.terminate()
 
     def bitToRow(self, pBits):
