@@ -79,5 +79,5 @@ class Pusle(Object):
         self.color = color
 
     def update(self, width):
-        self.content = [self.color]*width
+        self.content = [self.color]*int(width)
         # Weichzeichner
