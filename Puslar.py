@@ -51,7 +51,7 @@ class Pulsar(SubEngine):
             if width > self.last[i] + self.escapevelocity[i]:
                 auslenkung = width
                 speed = width - self.last[i]
-                print("Meteor")
+                print("Meteor" + str(i))
             else:
                 width = min(width, self.last[i] + 10)
                 sum = width
