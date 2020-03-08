@@ -28,7 +28,7 @@ class Pulsar(SubEngine):
         for i in range(self.layercount):
             Obj = Pusle(middle, basecolors[i])
             self.objects.append(Obj)
-            self.addObj(Obj, len(basecolors)-i)
+            self.addObj(Obj, len(basecolors)-1-i)
 
 
     def getStates(self):
