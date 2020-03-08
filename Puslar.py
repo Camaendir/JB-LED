@@ -5,7 +5,7 @@ import time
 
 class Pulsar(SubEngine):
 
-    def __init__(self, basefreqs=((10,15), (15,25), (25,35)), basecolors=((255,0,0), (0,255,0), (0,0,255)), middle=190, min_width=(50,25,2), max_width=(200, 120, 50), deflection=(2,1,0.5), escape_velocity=(40, 20, 10)):
+    def __init__(self, basefreqs=((10,13), (15,25), (30,35)), basecolors=((0,0,255), (0,255,0), (255,0,0)), middle=190, min_width=(50,30,20), max_width=(160, 120, 80), deflection=(2,1,0.5), escape_velocity=(40, 20, 10)):
         if len(basefreqs) is not len(basecolors) or len(min_width) is not len(max_width) or len(max_width) is not len(deflection) or len(deflection) is not len(basecolors):
             print("Array sizes not matching")
             return
