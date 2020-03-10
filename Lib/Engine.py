@@ -3,6 +3,12 @@ import Strip
 import paho.mqtt.client as mqtt
 import multiprocessing
 
+class Controler:
+
+    def __init__(self):
+        pass
+
+
 
 class Engine:
 
@@ -74,14 +80,13 @@ class Engine:
                     for i in range(len(frames)):
                         if frames[i] == [-1, -1, -1]:
                             frames[i] = frame[i]
+
             brPercent = float(self.brightness)/100
-            print(brPercent)
             for i in range(len(frames)):
                 color = []
                 for a in frames[i]:
                     color.append(int(max(0, a)*brPercent))
                 self.pixels.setPixel(i, color=color)
-            fr = time.clock()
             self.pixels.show()
         self.terminate()
 
