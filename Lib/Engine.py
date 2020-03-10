@@ -74,7 +74,7 @@ class Engine:
                     for i in range(len(frames)):
                         if frames[i] == [-1, -1, -1]:
                             frames[i] = frame[i]
-            brPercent = float(self.brightness/100)
+            brPercent = float(self.brightness)/100
             print(brPercent)
             for i in range(len(frames)):
                 color = []
