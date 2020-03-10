@@ -2,12 +2,17 @@ import time
 import Strip
 import paho.mqtt.client as mqtt
 import multiprocessing
+import threading
 
-class Controler:
+class Controler(threading.Thread):
 
-    def __init__(self):
+    def __init__(self, pSub, pIsEnabled):
+        self.isEnabled = pIsEnabled
+        self.isCompressed = pSub.isCompressed
+        self.pipe = None
+
+    def run(self):
         pass
-
 
 
 class Engine:
@@ -130,6 +135,7 @@ class Engine:
                     row[3] = True
                     break
             process.start()
+            process.
             self.frames[pMqttTopic] = ([[-1, -1, -1]]*450)
 
     def terminateSubEngine(self, pMqttTopic):
