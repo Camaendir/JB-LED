@@ -63,7 +63,6 @@ class Engine:
                     self.startSubEngine(row[0])
                 elif not row[3] and row[2] != None and row[1] != None:
                     self.terminateSubEngine(row[0])
-                    pass
                 elif row[3]:
                     frame = self.frames[row[0]]
                     if row[2].poll():
@@ -76,14 +75,15 @@ class Engine:
                     for i in range(len(frames)):
                         if frames[i] == [-1, -1, -1]:
                             frames[i] = frame[i]
+            brPercent = self.brightness/100
+            print(brPercent)
             for i in range(len(frames)):
                 color = []
                 for a in frames[i]:
-                    color.append(max(0, a))
+                    color.append(int(max(0, a)*))
                 self.pixels.setPixel(i, color=color)
             fr = time.clock()
             self.pixels.show()
-            #time.sleep(1)
         self.terminate()
 
     def bitToRow(self, pBits):
