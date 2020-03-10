@@ -25,7 +25,6 @@ class Engine:
         self.client.loop_start()
 
     def on_message(self, client, userdata, msg):
-        global br
         topic = msg.topic
         print([msg.topic, msg.payload])
         if topic == "strip/command":
@@ -36,7 +35,7 @@ class Engine:
         elif topic.startswith("strip/color/"):
             topic = topic[12:]
             if topic == "brightnis":
-                br = int(msg.payload)
+                self.brightness = int(msg.payload)
         elif topic.startswith("strip/effekt/"):
             topic = topic[13:]
             for row in self.processes:
