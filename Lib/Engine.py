@@ -80,7 +80,7 @@ class Engine:
             for i in range(len(frames)):
                 color = []
                 for a in frames[i]:
-                    color.append(int(max(0, a)*))
+                    color.append(int(max(0, a)*brPercent))
                 self.pixels.setPixel(i, color=color)
             fr = time.clock()
             self.pixels.show()
