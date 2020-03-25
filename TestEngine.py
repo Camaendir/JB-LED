@@ -1,6 +1,5 @@
 from Lib.Engine import Engine
-from Lib.SubEngine import SubEngine
-from Lib.Panel import Panel
+from Lib.Objects.Panel import Panel
 
 from MainLamp import *
 from Musik import SpecTrain

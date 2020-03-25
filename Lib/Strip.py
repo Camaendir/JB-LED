@@ -12,7 +12,8 @@ class StripArrangement:
     def addStrip(self, pPixellength, pPin, pDMA, pChanel, pIsReversed):
         if not self.isCreated:
             self.layout.append([pPixellength, pPin, pDMA, pChanel, pIsReversed])
-
+            return True
+        return False
     def create(self):
         self.isCreated=True
         tmp=[]

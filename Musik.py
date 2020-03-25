@@ -1,6 +1,5 @@
 #Basierend auf https://www.youtube.com/watch?v=AShHJdSIxkY
 
-import math
 import pyaudio
 import struct
 import numpy as np
@@ -8,8 +7,8 @@ import threading
 from colorsys import hls_to_rgb
 import time
 from Lib.SubEngine import *
-from Lib.Object import Object
-from Lib.Panel import Panel
+from Lib.Objects.Object import Object
+from Lib.Objects.Panel import Panel
 
 class Adapter(threading.Thread):
 

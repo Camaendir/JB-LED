@@ -1,19 +1,8 @@
 import time
-import Strip
 import paho.mqtt.client as mqtt
 import multiprocessing
-import threading
 
-class Controler(threading.Thread):
-
-    def __init__(self, pSub, pIsEnabled):
-        self.isEnabled = pIsEnabled
-        self.isCompressed = pSub.isCompressed
-        self.pipe = None
-
-    def run(self):
-        pass
-
+from Lib.Strip import StripArrangement
 
 class Engine:
 
@@ -23,9 +12,7 @@ class Engine:
         self.subengines = []
         self.processes = []
         self.frames = {}
-        self.pixels = Strip.Strip()
-        self.pixels.create()
-        self.pixels.blackout()
+        self.pixels = StripArrangement()
 
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
@@ -34,6 +21,9 @@ class Engine:
         self.client.subscribe("strip/command")
         self.client.subscribe("strip/color/#")
         self.client.loop_start()
+
+    def addStrip(self, pPixellength, pPin, pDMA, pChanel, pIsReversed):
+        return self.pixels.addStrip(pPixellength, pPin, pDMA, pChanel, pIsReversed)
 
     def on_message(self, client, userdata, msg):
         topic = msg.topic
@@ -64,6 +54,8 @@ class Engine:
 
     def run(self):
         self.isRunning = True
+        self.pixels.create()
+        self.pixels.blackout()
 
         while self.isRunning:
             fr = time.clock()
@@ -135,7 +127,6 @@ class Engine:
                     row[3] = True
                     break
             process.start()
-            process.
             self.frames[pMqttTopic] = ([[-1, -1, -1]]*450)
 
     def terminateSubEngine(self, pMqttTopic):

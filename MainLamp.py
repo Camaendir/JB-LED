@@ -1,8 +1,6 @@
-import math
 from Lib.SubEngine import *
-from Lib.Object import *
+from Lib.Objects.Object import *
 
-from math import floor
 from random import random
 
 global pixellength
@@ -29,10 +27,8 @@ class Fading(SubEngine):
         self.p = Background()
         self.addObj(self.p)
 
-
     def onMessage(self, topic, payload):
         print(["Fading", topic, payload])
-
 
     def update(self):
         self.getColor()
@@ -121,7 +117,6 @@ class Alarm(SubEngine):
             self.obj.append(Snake(length = 15))
             self.obj[snk].double = snk * 50
             self.addObj(self.obj[snk])
-            
 
     def setColor(self, color):
         for snk in range(9):
