@@ -3,14 +3,15 @@ from Lib.Objects.Snake import Snake
 
 class Alarm(SubEngine):
 
-    def __init__(self, pPixellength):
+    def __init__(self, pPixellength, pSnakelength):
         self.pixellength = pPixellength
+        self.snakelength = pSnakelength
         self.build("Alarm", self.pixellength, 1)
         self.rgb = [255, 0, 0]
         self.obj = []
 
         for snk in range(9):
-            self.obj.append(Snake(length = 15))
+            self.obj.append(Snake(length=self.snakelength))
             self.obj[snk].double = snk * 50
             self.addObj(self.obj[snk])
 
