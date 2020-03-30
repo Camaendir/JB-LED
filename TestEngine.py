@@ -1,9 +1,9 @@
 from Lib.Engine import Engine
+from Lib.Effects.Alarm import Alarm
 
 if __name__ == '__main__':
     eng = Engine()
-    eng.addSubEngine(Alarm(), False)
-    eng.addSubEngine(MultiSnake(), False)
-    spec = SpecTrain() 
-    eng.addSubEngine(spec, True)
+    eng.addStrip(16, 18, 10, 0, True)
+    #eng.addStrip(16, 13, 11, 1, False)
+    eng.addSubEngine(Alarm(16, 3), True)
     eng.run()
