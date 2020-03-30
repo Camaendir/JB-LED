@@ -94,11 +94,6 @@ class SubEngine:
                     mqtt = stri[2:].split("/")
                     self.onMessage(mqtt[0], mqtt[1])
 
-
-
-
-
-
     def controler(self):
         buff = []
         buff.append(self.pipe.recv())
