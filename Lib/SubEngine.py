@@ -1,4 +1,5 @@
-from Layer import Layer
+from Lib.Layer import Layer
+from time import sleep
 
 class SubEngine:
 
@@ -29,22 +30,25 @@ class SubEngine:
     def run(self):
         self.isRunning = True
         while self.isRunning:
-            self.update()
-            plain = [self.transparent] * self.pixellength
-            frames = []
-            for i in range(len(self.layList)):
-                frames.append(self.layList[i].getFrame())
-
-            for i in range(len(frames)):
-                for j in range(self.pixellength):
-                    if plain[j] == self.transparent and frames[i][j] != self.transparent:
-                        plain[j] = frames[i][j]
-            if self.isCompressed:
-                self.pipe.send(self.compFrame(plain))
-            else:
-                self.pipe.send(plain)
             self.controler()
-    
+
+
+    def sendFrame(self):
+        self.update()
+        plain = [self.transparent] * self.pixellength
+        frames = []
+        for i in range(len(self.layList)):
+            frames.append(self.layList[i].getFrame())
+
+        for i in range(len(frames)):
+            for j in range(self.pixellength):
+                if plain[j] == self.transparent and frames[i][j] != self.transparent:
+                    plain[j] = frames[i][j]
+        if self.isCompressed:
+            self.pipe.send(self.compFrame(plain))
+        else:
+            self.pipe.send(plain)
+
     def compFrame(self, pFrame):
         block = []
         currentBlock = 0
@@ -72,6 +76,28 @@ class SubEngine:
         else:
             retVal = (pRow[0] << 24) + (pRow[1][0] << 16) + (pRow[1][1] << 8) +pRow[1][2]
         return retVal
+
+    def controler2(self):
+        buff = []
+        while self.pipe.poll():
+            buff.append(self.pipe.recv())
+
+        if len(buff)==0:
+            sleep(0.001)
+        else:
+            for stri in buff:
+                if stri == "t":
+                    self.isRunning = False
+                elif stri == "f":
+                    self.sendFrame()
+                elif stri.startswith("m:"):
+                    mqtt = stri[2:].split("/")
+                    self.onMessage(mqtt[0], mqtt[1])
+
+
+
+
+
 
     def controler(self):
         buff = []
