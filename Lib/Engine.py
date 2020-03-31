@@ -111,6 +111,7 @@ class Engine:
     def startSubEngine(self, pMqttTopic):
         if self.isRunning: #[pSub.mqttTopic, process, parent, True]
             newSub = None
+            print("start")
             for sub in self.subengines:
                 if sub.mqttTopic == pMqttTopic:
                     newSub = sub

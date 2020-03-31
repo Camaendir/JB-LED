@@ -30,7 +30,11 @@ class SubEngine:
     def run(self):
         self.isRunning = True
         while self.isRunning:
-            self.controler()
+            try:
+                self.controler()
+            except:
+                print("Error") 
+            self.sendFrame()
 
 
     def sendFrame(self):
@@ -44,6 +48,7 @@ class SubEngine:
             for j in range(self.pixellength):
                 if plain[j] == self.transparent and frames[i][j] != self.transparent:
                     plain[j] = frames[i][j]
+        print(len(plain))
         if self.isCompressed:
             self.pipe.send(self.compFrame(plain))
         else:
@@ -77,7 +82,7 @@ class SubEngine:
             retVal = (pRow[0] << 24) + (pRow[1][0] << 16) + (pRow[1][1] << 8) +pRow[1][2]
         return retVal
 
-    def controler2(self):
+    def controler(self):
         buff = []
         while self.pipe.poll():
             buff.append(self.pipe.recv())
@@ -94,10 +99,13 @@ class SubEngine:
                     mqtt = stri[2:].split("/")
                     self.onMessage(mqtt[0], mqtt[1])
 
-    def controler(self):
+    def controler2(self):
         buff = []
-        buff.append(self.pipe.recv())
+        print(1)
+        #buff.append(self.pipe.recv())
+        print(2)
         while self.pipe.poll():
+            print("controler")
             buff.append(self.pipe.recv())
         keepgoing = False
         for stri in buff:
