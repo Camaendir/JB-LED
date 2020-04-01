@@ -1,19 +1,21 @@
 import time
-import paho.mqtt.client as mqtt
 import multiprocessing
-
-from Lib.Strip import StripArrangement
 
 class Engine:
 
-    def __init__(self):
+    def __init__(self, pMQTT):
         self.isRunning = False
         self.brightness = 100
         self.subengines = []
         self.processes = []
         self.frames = {}
-        self.pixels = StripArrangement()
+        self.controler = None
 
+        if pMQTT:
+            self.startMQTT()
+
+    def startMQTT(self):
+        import paho.mqtt.client as mqtt
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
         self.client.connect("localhost", 1883, 60)
@@ -22,8 +24,8 @@ class Engine:
         self.client.subscribe("strip/color/#")
         self.client.loop_start()
 
-    def addStrip(self, pPixellength, pPin, pDMA, pChanel, pIsReversed):
-        return self.pixels.addStrip(pPixellength, pPin, pDMA, pChanel, pIsReversed)
+    def setControler(self, pControler):
+        self.controler = pControler
 
     def on_message(self, client, userdata, msg):
         topic = msg.topic
@@ -53,42 +55,47 @@ class Engine:
             self.processes.append([pSub.mqttTopic, None, None, pIsEnabled, pSub.isCompressed])
 
     def run(self):
-        self.isRunning = True
-        self.pixels.create()
-        self.pixels.blackout()
+        try:
+            self.isRunning = True
+            self.controler.setup()
 
-        while self.isRunning:
-            fr = time.clock()
-            frames = [[-1, -1, -1]] * self.pixels.pixellength
-            for row in self.processes:
-                if row[3] and row[2]==None and row[1] == None:
-                    self.startSubEngine(row[0])
-                elif not row[3] and row[2] != None and row[1] != None:
-                    self.terminateSubEngine(row[0])
-                elif row[3]:
-                    frame = self.frames[row[0]]
-                    if row[2].poll():
-                        if row[4]:
-                            frame = self.decompFrame(row[2].recv())
-                        else:
-                            frame = row[2].recv()
-                        self.frames[row[0]] = frame
-                        row[2].send("f")
-                    for i in range(len(frames)):
-                        if frames[i] == [-1, -1, -1]:
-                            frames[i] = frame[i]
+            while self.isRunning:
+                fr = time.clock()
+                frames = [[-1, -1, -1]] * self.controler.pixellength
+                for row in self.processes:
+                    if row[3] and row[2] == None and row[1] == None:
+                        self.startSubEngine(row[0])
+                    elif not row[3] and row[2] != None and row[1] != None:
+                        self.terminateSubEngine(row[0])
+                    elif row[3]:
+                        frame = self.frames[row[0]]
+                        if row[2].poll():
+                            if row[4]:
+                                frame = self.decompFrame(row[2].recv())
+                            else:
+                                frame = row[2].recv()
+                            self.frames[row[0]] = frame
+                            row[2].send("f")
+                        for i in range(len(frames)):
+                            if frames[i] == [-1, -1, -1]:
+                                frames[i] = frame[i]
 
-            brPercent = float(self.brightness)/100
-            for i in range(len(frames)):
-                color = []
-                for a in frames[i]:
-                    color.append(int(max(0, a)*brPercent))
-                self.pixels.setPixel(i, color=color)
-            self.pixels.show()
-            fr = time.clock() - fr
-            if fr <= 0.02:
-                time.sleep(0.02 - fr)
-        self.terminate()
+                brPercent = float(self.brightness) / 100
+                completeFrame = []
+                for i in range(len(frames)):
+                    color = []
+                    for a in frames[i]:
+                        color.append(int(max(0, a) * brPercent))
+                    completeFrame.append(color)
+                self.controler.setFrame(completeFrame)
+                fr = time.clock() - fr
+                if fr <= 0.02:
+                    time.sleep(0.02 - fr)
+        except KeyboardInterrupt:
+            self.terminateAll()
+        except:
+            print("Error: in Engine")
+            self.terminateAll()
 
     def bitToRow(self, pBits):
         retVal = [0, [0, 0, 0]]
@@ -157,3 +164,11 @@ class Engine:
             row[1] = None
             row[2] = None
         print("Done!")
+
+if __name__ == '__main__':
+    from Lib.Controler.TestControler import TestControler
+    print("Test")
+    eng = Engine(False)
+    eng.setControler(TestControler())
+    eng.run()
+
