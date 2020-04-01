@@ -48,7 +48,6 @@ class SubEngine:
             for j in range(self.pixellength):
                 if plain[j] == self.transparent and frames[i][j] != self.transparent:
                     plain[j] = frames[i][j]
-        print(len(plain))
         if self.isCompressed:
             self.pipe.send(self.compFrame(plain))
         else:

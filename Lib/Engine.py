@@ -59,7 +59,7 @@ class Engine:
 
         while self.isRunning:
             fr = time.clock()
-            frames = [[-1, -1, -1]] * 450
+            frames = [[-1, -1, -1]] * self.pixels.pixellength
             for row in self.processes:
                 if row[3] and row[2]==None and row[1] == None:
                     self.startSubEngine(row[0])
@@ -85,6 +85,9 @@ class Engine:
                     color.append(int(max(0, a)*brPercent))
                 self.pixels.setPixel(i, color=color)
             self.pixels.show()
+            fr = time.clock() - fr
+            if fr <= 0.02:
+                time.sleep(0.02 - fr)
         self.terminate()
 
     def bitToRow(self, pBits):
@@ -111,7 +114,6 @@ class Engine:
     def startSubEngine(self, pMqttTopic):
         if self.isRunning: #[pSub.mqttTopic, process, parent, True]
             newSub = None
-            print("start")
             for sub in self.subengines:
                 if sub.mqttTopic == pMqttTopic:
                     newSub = sub
