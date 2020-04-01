@@ -1,7 +1,6 @@
 from neopixel import *
 from time import sleep
 
-
 class StripArrangement:
 
     def __init__(self):
@@ -26,7 +25,9 @@ class StripArrangement:
         self.layout = tmp
 
     def setFrame(self, pFrame):
-        pass
+        for i in range(len(pFrame)):
+            self.setPixel(i, pFrame[i])
+        self.show()
 
     def setPixel(self, pPixel, color):
         count = 0

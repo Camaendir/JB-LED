@@ -164,11 +164,3 @@ class Engine:
             row[1] = None
             row[2] = None
         print("Done!")
-
-if __name__ == '__main__':
-    from Lib.Controler.TestControler import TestControler
-    print("Test")
-    eng = Engine(False)
-    eng.setControler(TestControler())
-    eng.run()
-
