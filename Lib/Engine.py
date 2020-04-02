@@ -3,7 +3,7 @@ import multiprocessing
 
 class Engine:
 
-    def __init__(self, pMQTT):
+    def __init__(self):
         self.isRunning = False
         self.brightness = 100
         self.subengines = []
@@ -11,17 +11,14 @@ class Engine:
         self.frames = {}
         self.controler = None
 
-        if pMQTT:
-            self.startMQTT()
-
-    def startMQTT(self):
+    def startMQTT(self,pName):
         import paho.mqtt.client as mqtt
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
         self.client.connect("localhost", 1883, 60)
-        self.client.subscribe("strip/effekt/#")
-        self.client.subscribe("strip/command")
-        self.client.subscribe("strip/color/#")
+        self.client.subscribe(pName+ "/effekt/#")
+        self.client.subscribe(pName+ "/command")
+        self.client.subscribe(pName+ "/color/#")
         self.client.loop_start()
 
     def setControler(self, pControler):
