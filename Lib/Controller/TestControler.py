@@ -6,9 +6,9 @@ from PyQt5.QtGui import QIcon
 
 class TestControler(QWidget):
 
-    def __init__(self):
+    def __init__(self, pPixellength = 16):
         print("Controler:__init__")
-        self.pixellength = 16
+        self.pixellength = pPixellength
 
         super().__init__()
         self.title = 'PyQt5 simple window - pythonspot.com'

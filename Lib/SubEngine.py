@@ -36,7 +36,6 @@ class SubEngine:
                 print("Error") 
             self.sendFrame()
 
-
     def sendFrame(self):
         self.update()
         plain = [self.transparent] * self.pixellength
@@ -92,29 +91,9 @@ class SubEngine:
             for stri in buff:
                 if stri == "t":
                     self.isRunning = False
+                    self.onMessage("TERMINATE","TERMINATE")
                 elif stri == "f":
                     self.sendFrame()
                 elif stri.startswith("m:"):
                     mqtt = stri[2:].split("/")
                     self.onMessage(mqtt[0], mqtt[1])
-
-    def controler2(self):
-        buff = []
-        print(1)
-        #buff.append(self.pipe.recv())
-        print(2)
-        while self.pipe.poll():
-            print("controler")
-            buff.append(self.pipe.recv())
-        keepgoing = False
-        for stri in buff:
-            if stri == "t":
-                self.isRunning = False
-            elif stri.startswith("m:"):
-                mqtt = stri[2:].split("/")
-                self.onMessage(mqtt[0],mqtt[1])
-            elif stri == "f":
-                keepgoing = True
-        if not keepgoing and self.isRunning:
-            self.controler()
-

@@ -1,22 +1,49 @@
 from Lib.Engine import Engine
 from Lib.Effects.Alarm import Alarm
+from Lib.Effects.UDPSocket import UDPSocket
+
+from Lib.SubEngine import SubEngine
+from Lib.Objects.Display import Display
+
+class TestEngine(SubEngine):
+
+    def __init__(self):
+        self.build("TestEngine", 16, 1)
+        self.obj = Display(5001, 16)
+        self.addObj(self.obj)
+
+    def update(self):
+        if self.obj.isRunning == False:
+            self.obj.startSocket()
+
+    def onMessage(self, topic, payload):
+        pass
+
+    def getStates(self):
+        return None
 
 
 if __name__ == '__main__':
     strip = None
     pycharm = True
+    gui = False
 
     if not pycharm:
         from Lib.Controller.StripArrangement import StripArrangement
         strip = StripArrangement()
         strip.addStrip(16, 18, 10, 0, True)
-    else:
+    elif gui:
         import sys
         from Lib.Controller.TestControler import TestControler
         from PyQt5.QtWidgets import QApplication
         app = QApplication(sys.argv)
         strip = TestControler()
+    else:
+        from Lib.Controller.Console import Consol
+        strip = Consol()
+
     eng = Engine()
     eng.setControler(strip)
-    eng.addSubEngine(Alarm(16, 3), True)
+    eng.addSubEngine(TestEngine(), True)
+    eng.addSubEngine(Alarm(16,4), False)
     eng.run()

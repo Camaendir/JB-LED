@@ -83,6 +83,5 @@ class SpecTrain(SubEngine):
         for i in range(self.bufferlength - 1):
             self.buffer[self.bufferlength - 1 -i] = self.buffer[self.bufferlength - 2 - i]
 
-
     def onMessage(self):
         pass

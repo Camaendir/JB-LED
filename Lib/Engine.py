@@ -10,6 +10,7 @@ class Engine:
         self.processes = []
         self.frames = {}
         self.controler = None
+        self.pixellength = 0
 
     def startMQTT(self,pName):
         import paho.mqtt.client as mqtt
@@ -55,10 +56,11 @@ class Engine:
         try:
             self.isRunning = True
             self.controler.setup()
+            self.pixellength = self.controler.pixellength
 
             while self.isRunning:
                 fr = time.clock()
-                frames = [[-1, -1, -1]] * self.controler.pixellength
+                frames = [[-1, -1, -1]] * self.pixellength
                 for row in self.processes:
                     if row[3] and row[2] == None and row[1] == None:
                         self.startSubEngine(row[0])
@@ -134,7 +136,7 @@ class Engine:
                     row[3] = True
                     break
             process.start()
-            self.frames[pMqttTopic] = ([[-1, -1, -1]]*450)
+            self.frames[pMqttTopic] = ([[-1, -1, -1]]*self.pixellength)
 
     def terminateSubEngine(self, pMqttTopic):
         for row in self.processes:
@@ -150,14 +152,17 @@ class Engine:
                 row[3] = False
 
     def terminateAll(self):
+        return None
         for row in self.processes:
-            print("Terminate Process...")
-            row[2].send("t")
+            if row[2] != None:
+                print("Terminate Process...")
+                row[2].send("t")
 
         for row in self.processes:
-            print("Join Process...")
-            row[1].join()
-            row[2].close()
-            row[1] = None
-            row[2] = None
+            if row[1].is_alive:
+                print("Join Process...")
+                row[1].join()
+                row[2].close()
+                row[1] = None
+                row[2] = None
         print("Done!")
