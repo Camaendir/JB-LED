@@ -6,9 +6,9 @@ from time import sleep
 
 from socket import socket
 from socket import AF_INET
-from socket import SOCK_DGRAM
+from socket import SOCK_STREAM
 
-class UDPSocket(SubEngine):
+class FrameMaster(SubEngine):
 
     def __init__(self, pPixellength, pPort):
         self.build("UDPSocket", pPixellength, 1)
@@ -27,14 +27,21 @@ class UDPSocket(SubEngine):
 
     def reciveData(self):
         self.isReciving = True
-        self.sock = socket(AF_INET, SOCK_DGRAM)
+        self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.bind(("127.0.0.1", self.port))
         while self.isReciving:
             try:
-                data, addr = self.sock.recvfrom(self.pixellength*3)
+                self.sock.listen()
+                con, addr = self.sock.accept()
+                active = True
+                while active:
+                    try:
+                        data = con.recv(self.pixellength * 3)
+                        self.setContent(data)
+                    except:
+                        active = False
             except:
-                print("UDPSocket: Socket Error")
-            self.setContent(data)
+                print("T")
 
     def setContent(self, pBytes):
         frame = []

@@ -1,8 +1,8 @@
 
 class Consol:
 
-    def __init__(self):
-        self.pixellength = 16
+    def __init__(self, pPixellength):
+        self.pixellength = pPixellength
         self.lastFrame = None
 
     def setup(self):

@@ -35,10 +35,13 @@ class StripArrangement:
             if row[1] + count > pPixel:
                 if row[2]:
                     row[0].setPixelColor(row[1]-(pPixel-count)-1, Color(color[1], color[0], color[2])) # inverted Strip not Implemented yet
+                    break
                 else:
                     row[0].setPixelColor(pPixel-count, Color(color[1], color[0], color[2]))
+                    break
             else:
                 count = count + row[1]
+
 
     def show(self):
         if self.isCreated:

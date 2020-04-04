@@ -1,6 +1,6 @@
 from Lib.Engine import Engine
 from Lib.Effects.Alarm import Alarm
-from Lib.Effects.UDPSocket import UDPSocket
+from Lib.Effects.FrameMaster import FrameMaster
 
 from Lib.SubEngine import SubEngine
 from Lib.Objects.Display import Display
@@ -40,10 +40,10 @@ if __name__ == '__main__':
         strip = TestControler()
     else:
         from Lib.Controller.Console import Consol
-        strip = Consol()
+        strip = Consol(450)
 
     eng = Engine()
     eng.setControler(strip)
-    eng.addSubEngine(TestEngine(), True)
-    eng.addSubEngine(Alarm(16,4), False)
+    eng.addSubEngine(FrameMaster(450, 5001), True)
+    eng.addSubEngine(Alarm(450, 15), False)
     eng.run()
