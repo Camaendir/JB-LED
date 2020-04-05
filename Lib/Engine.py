@@ -58,14 +58,7 @@ class Engine:
             self.controler.setup()
             self.pixellength = self.controler.pixellength
 
-
-            counter= 0
             while self.isRunning:
-                print(counter)
-                counter = counter+1
-                if counter == 500:
-                    self.terminateAll()
-
                 fr = time.clock()
                 frames = [[-1, -1, -1]] * self.pixellength
                 for row in self.processes:
