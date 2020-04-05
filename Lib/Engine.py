@@ -1,5 +1,6 @@
 import time
 import multiprocessing
+from Lib.Compression import decompFrame
 
 class Engine:
 
@@ -74,7 +75,7 @@ class Engine:
                         frame = self.frames[row[0]]
                         if row[2].poll():
                             if row[4]:
-                                frame = self.decompFrame(row[2].recv())
+                                frame = decompFrame(row[2].recv())
                             else:
                                 frame = row[2].recv()
                             self.frames[row[0]] = frame
@@ -102,26 +103,7 @@ class Engine:
             print("Error: in Engine")
             self.terminateAll()
 
-    def bitToRow(self, pBits):
-        retVal = [0, [0, 0, 0]]
-        retVal[0] = (pBits & 4278190080) >> 24
-        if retVal[0] == 255:
-            retVal[0] = pBits & 255
-            retVal[1] = [-1,-1,-1]
-        else:
-            retVal[1][0] = (pBits & 16711680) >> 16
-            retVal[1][1] = (pBits & 65280) >> 8
-            retVal[1][2] = pBits & 255
-        return retVal
 
-    def decompFrame(self, pFrame):
-        block = []
-        for data in pFrame:
-            block.append(self.bitToRow(data))
-        retVal = []
-        for row in block:
-            retVal = retVal + [row[1]]*(row[0]+1)
-        return retVal
 
     def startSubEngine(self, pMqttTopic):
         if self.isRunning: #[pSub.mqttTopic, process, parent, True]

@@ -1,4 +1,5 @@
 from Lib.Connection.TCPClient import TCPClient
+from Lib.Compression import compFrame
 
 class FrameStreamer:
 
@@ -12,8 +13,4 @@ class FrameStreamer:
 
     def setFrame(self, pFrame):
         if self.tcp.isConnected:
-            data = []
-            for pixel in pFrame:
-                for color in pixel:
-                    data.append(color)
-            self.tcp.sendData(data)
+            self.tcp.sendData(compFrame(pFrame))

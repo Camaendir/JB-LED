@@ -13,5 +13,5 @@ if __name__ == '__main__':
     eng.setControler(strip)
     eng.startMQTT("strip")
     eng.addSubEngine(FrameMaster(450, "192.168.2.114", 6501), True)
-    eng.addSubEngine(Alarm(450,15), False)
+    eng.addSubEngine(Alarm(450, 15), False)
     eng.run()

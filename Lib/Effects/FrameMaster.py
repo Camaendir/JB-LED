@@ -1,6 +1,7 @@
 from Lib.SubEngine import SubEngine
 from Lib.Objects.Object import Object
 from Lib.Connection.TCPServer import TCPServer
+from Lib.Compression import decompFrame
 
 from threading import Thread
 
@@ -45,15 +46,7 @@ class FrameMaster(SubEngine):
                 self.tcpServer.listen()
 
     def setContent(self, pBytes):
-        frame = []
-        block = []
-        for byte in pBytes:
-            if len(block)>=3:
-                frame.append(block)
-                block = []
-            block.append(int(byte))
-        frame.append(block)
-        self.display.content = frame
+        self.display.content = decompFrame(pBytes)
 
     def update(self):
         if self.thread == None:

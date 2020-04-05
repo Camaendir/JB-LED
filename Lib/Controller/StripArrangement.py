@@ -1,4 +1,4 @@
-from neopixel import *
+from Lib.Controller.neopixel import *
 from time import sleep
 
 class StripArrangement:
