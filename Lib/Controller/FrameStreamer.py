@@ -13,4 +13,8 @@ class FrameStreamer:
 
     def setFrame(self, pFrame):
         if self.tcp.isConnected:
-            self.tcp.sendData(compFrame(pFrame))
+            data = []
+            for pixel in pFrame:
+                for color in pixel:
+                    data.append(color)
+            self.tcp.sendData(data)

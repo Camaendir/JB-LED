@@ -46,7 +46,16 @@ class FrameMaster(SubEngine):
                 self.tcpServer.listen()
 
     def setContent(self, pBytes):
-        self.display.content = decompFrame(pBytes)
+        buffer = []
+        frame = []
+        for byte in pBytes:
+            if len(buffer) < 3:
+                buffer.append(int(byte))
+            else:
+                frame.append(buffer)
+                buffer = [byte]
+        frame.append(buffer)
+        self.display.content = frame
 
     def update(self):
         if self.thread == None:
