@@ -62,6 +62,10 @@ class Engine:
                 fr = time.clock()
                 frames = [[-1, -1, -1]] * self.pixellength
                 for row in self.processes:
+                    if row[3] and row[2] != None and row[1] != None:
+                        row[2].send("f")
+
+                for row in self.processes:
                     if row[3] and row[2] == None and row[1] == None:
                         self.startSubEngine(row[0])
                     elif not row[3] and row[2] != None and row[1] != None:
@@ -77,7 +81,6 @@ class Engine:
                         for i in range(len(frames)):
                             if frames[i] == [-1, -1, -1]:
                                 frames[i] = frame[i]
-                        row[2].send("f")
 
                 brPercent = float(self.brightness) / 100
                 completeFrame = []

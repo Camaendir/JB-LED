@@ -1,34 +1,19 @@
-from socket import socket
-from socket import AF_INET
-from socket import SOCK_STREAM
+from Lib.Connection.TCPClient import TCPClient
 
 class FrameStreamer:
 
     def __init__(self, pAddress, pPort, pPixellength):
-        self.addr = (pAddress, pPort)
+        self.tcp = TCPClient(pAddress, pPort, pPixellength*3)
+        self.tcp.setTimeout(1)
         self.pixellength = pPixellength
-        self.sock = None
 
     def setup(self):
-        if self.sock == None:
-            self.sock = socket(AF_INET, SOCK_STREAM)
-            try:
-                self.sock.connect(self.addr)
-            except:
-                print("FrameStreamer: Error")
-                self.sock = None
+        self.tcp.connect()
 
     def setFrame(self, pFrame):
-        if self.sock == None:
-            self.setup()
-
-        try:
+        if self.tcp.isConnected:
             data = []
             for pixel in pFrame:
                 for color in pixel:
                     data.append(color)
-            self.sock.sendall(bytes(data))
-            print("Frame Sended...")
-        except:
-            print("FrameStreamer: Error in setFrame")
-            self.setup()
+            self.tcp.sendData(data)

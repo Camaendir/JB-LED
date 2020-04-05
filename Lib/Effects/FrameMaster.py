@@ -1,51 +1,48 @@
 from Lib.SubEngine import SubEngine
 from Lib.Objects.Object import Object
+from Lib.Connection.TCPServer import TCPServer
 
 from threading import Thread
-from time import sleep
 
-from socket import socket
-from socket import AF_INET
-from socket import SOCK_STREAM
+
 
 class FrameMaster(SubEngine):
 
-    def __init__(self, pPixellength, pPort):
+    def __init__(self, pPixellength, pIp, pPort):
         self.build("FrameMaster", pPixellength, 1)
+        self.ip = pIp
         self.port = pPort
+
         self.display = Object()
         self.display.build(True, 0 ,[[-1,-1,-1]] * self.pixellength)
         self.addObj(self.display)
+
         self.isReciving = False
         self.thread = None
-        self.sock = None
+        self.tcpServer = None
 
-    def startSocket(self):
+    def startServer(self):
         if self.thread == None:
-            self.thread = Thread(target=self.reciveData)
+            self.thread = Thread(target=self.runSever)
             self.thread.start()
 
-    def reciveData(self):
+    def closeServer(self):
+        if self.thread != None:
+            self.isReciving = False
+            self.tcpServer.disconnect()
+
+    def runSever(self):
+        self.tcpServer = TCPServer(self.port, self.pixellength*3, ip=self.ip)
+        self.tcpServer.setStreamTimeout(0.5)
         self.isReciving = True
-        self.sock = socket(AF_INET, SOCK_STREAM)
-        self.sock.bind(("127.0.0.1", self.port))
-        self.sock.settimeout(0.05)
         while self.isReciving:
-            try:
-                self.sock.listen(1)
-                con, addr = self.sock.accept()
-                con.settimeout(0.5)
-                active = True
-                while active and self.isReciving:
-                    try:
-                        data = con.recv(self.pixellength * 3)
-                        self.setContent(data)
-                    except:
-                        active = False
-                con.close()
-            except:
-                print("FrameMaster: Error")
-        self.sock.close()
+            if self.tcpServer.isConnected:
+                data = self.tcpServer.reciveData()
+                if data != None:
+                    self.setContent(data)
+            else:
+                print("Listen")
+                self.tcpServer.listen()
 
     def setContent(self, pBytes):
         frame = []
@@ -56,56 +53,15 @@ class FrameMaster(SubEngine):
                 block = []
             block.append(int(byte))
         frame.append(block)
-        if self.isContent(frame):
-            self.display.content = frame
-
-    def isContent(self, pFrame):
-        try:
-            if len(pFrame) != self.pixellength:
-                return False
-
-            for pixel in pFrame:
-                if len(pixel) != 3:
-                    return False
-                for color in pixel:
-                    if type(color) is not int or color < 0 or color > 255:
-                        return False
-        except:
-            print("FrameMaster: Wrong Input Format!")
-            return False
-        return True
-
-    def terminateSocket(self):
-        self.isReciving = False
-
-    def decompData(self, pFrame):
-        block = []
-        for data in pFrame:
-            block.append(self.bitToRow(data))
-        retVal = []
-        for row in block:
-            retVal = retVal + [row[1]]*(row[0]+1)
-        return retVal
-
-    def bitToRow(self, pBits):
-        retVal = [0, [0, 0, 0]]
-        retVal[0] = (pBits & 4278190080) >> 24
-        if retVal[0] == 255:
-            retVal[0] = pBits & 255
-            retVal[1] = [-1,-1,-1]
-        else:
-            retVal[1][0] = (pBits & 16711680) >> 16
-            retVal[1][1] = (pBits & 65280) >> 8
-            retVal[1][2] = pBits & 255
-        return retVal
+        self.display.content = frame
 
     def update(self):
-        if self.thread==None:
-            self.startSocket()
+        if self.thread == None:
+            self.startServer()
 
     def onMessage(self, topic, payload):
         if topic == "TERMINATE" and payload == "TERMINATE":
-            self.terminateSocket()
+            self.closeServer()
 
     def getStates(self):
         return None

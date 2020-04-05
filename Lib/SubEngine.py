@@ -33,7 +33,7 @@ class SubEngine:
             try:
                 self.controler()
             except:
-                print("Error")
+                print("SubEngine: Error in Controler")
 
     def sendFrame(self):
         self.update()
