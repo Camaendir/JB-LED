@@ -1,12 +1,11 @@
 from Lib.Engine import Engine
 from Lib.Effects.Alarm import Alarm
-from Lib.Effects.FrameMaster import FrameMaster
+from Lib.Controller.FrameStreamer import FrameStreamer
 from Lib.Controller.Console import Consol
 
 if __name__ == '__main__':
-    strip = Consol(5)  # FrameStreamer("192.168.2.114", 6501, 450) #
+    strip = Consol(30) #FrameStreamer("192.168.2.114", 6501, 450)
     eng = Engine()
     eng.setControler(strip)
-    eng.addSubEngine(FrameMaster(5, "192.168.2.109", 6501), True)
-    eng.addSubEngine(Alarm(5, 1), False)
+    eng.addSubEngine(Alarm(30, 25), True)
     eng.run()

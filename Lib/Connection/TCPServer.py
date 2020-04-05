@@ -38,7 +38,7 @@ class TCPServer:
 
     def listen(self):
         try:
-            self.sock.listen()
+            self.sock.listen(1)
             con, addr = self.sock.accept()
             if self.timeout > 0:
                 con.settimeout(self.timeout)
