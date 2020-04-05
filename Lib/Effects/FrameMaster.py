@@ -11,7 +11,7 @@ from socket import SOCK_STREAM
 class FrameMaster(SubEngine):
 
     def __init__(self, pPixellength, pPort):
-        self.build("UDPSocket", pPixellength, 1)
+        self.build("FrameMaster", pPixellength, 1)
         self.port = pPort
         self.display = Object()
         self.display.build(True, 0 ,[[-1,-1,-1]] * self.pixellength)
@@ -29,19 +29,23 @@ class FrameMaster(SubEngine):
         self.isReciving = True
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.bind(("127.0.0.1", self.port))
+        self.sock.settimeout(0.05)
         while self.isReciving:
             try:
-                self.sock.listen()
+                self.sock.listen(1)
                 con, addr = self.sock.accept()
+                con.settimeout(0.5)
                 active = True
-                while active:
+                while active and self.isReciving:
                     try:
                         data = con.recv(self.pixellength * 3)
                         self.setContent(data)
                     except:
                         active = False
+                con.close()
             except:
-                print("T")
+                print("FrameMaster: Error")
+        self.sock.close()
 
     def setContent(self, pBytes):
         frame = []
@@ -55,7 +59,6 @@ class FrameMaster(SubEngine):
         if self.isContent(frame):
             self.display.content = frame
 
-
     def isContent(self, pFrame):
         try:
             if len(pFrame) != self.pixellength:
@@ -68,15 +71,12 @@ class FrameMaster(SubEngine):
                     if type(color) is not int or color < 0 or color > 255:
                         return False
         except:
-            print("UDPSocket: Wrong Input Format!")
+            print("FrameMaster: Wrong Input Format!")
             return False
         return True
 
-
     def terminateSocket(self):
         self.isReciving = False
-        if self.thread != None:
-            Thread.join(self.thread)
 
     def decompData(self, pFrame):
         block = []
@@ -104,9 +104,8 @@ class FrameMaster(SubEngine):
             self.startSocket()
 
     def onMessage(self, topic, payload):
-        if topic == "TERMIANTE" and payload == "TERMINATE":
-            if self.thread != None:
-                self.terminateSocket()
+        if topic == "TERMINATE" and payload == "TERMINATE":
+            self.terminateSocket()
 
     def getStates(self):
         return None

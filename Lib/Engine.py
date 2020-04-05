@@ -58,7 +58,14 @@ class Engine:
             self.controler.setup()
             self.pixellength = self.controler.pixellength
 
+
+            counter= 0
             while self.isRunning:
+                print(counter)
+                counter = counter+1
+                if counter == 500:
+                    self.terminateAll()
+
                 fr = time.clock()
                 frames = [[-1, -1, -1]] * self.pixellength
                 for row in self.processes:
@@ -74,10 +81,10 @@ class Engine:
                             else:
                                 frame = row[2].recv()
                             self.frames[row[0]] = frame
-                            row[2].send("f")
                         for i in range(len(frames)):
                             if frames[i] == [-1, -1, -1]:
                                 frames[i] = frame[i]
+                        row[2].send("f")
 
                 brPercent = float(self.brightness) / 100
                 completeFrame = []
@@ -86,10 +93,13 @@ class Engine:
                     for a in frames[i]:
                         color.append(int(max(0, a) * brPercent))
                     completeFrame.append(color)
+
                 self.controler.setFrame(completeFrame)
+
                 fr = time.clock() - fr
                 if fr <= 0.02:
                     time.sleep(0.02 - fr)
+
         except KeyboardInterrupt:
             self.terminateAll()
         except:
@@ -152,15 +162,15 @@ class Engine:
                 row[3] = False
 
     def terminateAll(self):
-        return None
+        self.isRunning = False
         for row in self.processes:
             if row[2] != None:
-                print("Terminate Process...")
+                print("Terminate Process... "+ row[0])
                 row[2].send("t")
 
         for row in self.processes:
-            if row[1].is_alive:
-                print("Join Process...")
+            if row[1] != None and row[1].is_alive:
+                print("Join Process... " +row[0])
                 row[1].join()
                 row[2].close()
                 row[1] = None

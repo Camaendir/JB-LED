@@ -40,10 +40,10 @@ if __name__ == '__main__':
         strip = TestControler()
     else:
         from Lib.Controller.Console import Consol
-        strip = Consol(450)
+        strip = Consol(5)
 
     eng = Engine()
     eng.setControler(strip)
-    eng.addSubEngine(FrameMaster(450, 5001), True)
-    eng.addSubEngine(Alarm(450, 15), False)
+    eng.addSubEngine(FrameMaster(5, 5001), True)
+    eng.addSubEngine(Alarm(5, 1), True)
     eng.run()

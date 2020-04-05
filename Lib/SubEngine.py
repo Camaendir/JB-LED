@@ -33,8 +33,7 @@ class SubEngine:
             try:
                 self.controler()
             except:
-                print("Error") 
-            self.sendFrame()
+                print("Error")
 
     def sendFrame(self):
         self.update()
@@ -84,7 +83,6 @@ class SubEngine:
         buff = []
         while self.pipe.poll():
             buff.append(self.pipe.recv())
-
         if len(buff)==0:
             sleep(0.001)
         else:

@@ -15,7 +15,6 @@ class Layer:
         field = []
         for i in range(self.pixellength):
             field.append(self.transparent)
-
         for obj in self.objList:
             if obj.isVisible:
                 for i in range(len(obj.content)):
