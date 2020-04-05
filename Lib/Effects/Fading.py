@@ -1,14 +1,14 @@
 from Lib.SubEngine import SubEngine
+from Lib.Objects.Background import Background
 
 class Fading(SubEngine):
 
-    def __init__(self):
+    def __init__(self, pPixellength):
+        self.build("Fading", pPixellength, 1)
         self.rgb = [255, 0, 0]
         self.phase = ([0, 1, 0], [-1, 0, 0], [0, 0, 1], [0, -1, 0], [1, 0, 0], [0, 0, -1])
         self.index = 0
-        self.build("Fading", 449, 5)
-
-        self.p = Background()
+        self.p = Background(self.pixellength)
         self.addObj(self.p)
 
     def onMessage(self, topic, payload):

@@ -77,6 +77,9 @@ class TCPServer:
     def disconnect(self):
         if self.isConnected:
             self.isConnected = False
-            self.connection[0].shutdown(SHUT_RDWR)
+            try:
+                self.connection[0].shutdown(SHUT_RDWR)
+            except:
+                pass
             self.connection[0].close()
             self.connection = [None, None]
