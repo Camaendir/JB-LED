@@ -1,0 +1,22 @@
+Controler:
+    Attributs:
+        pixellength Type Int
+    Methods:
+        setup() returns None
+        setFrame(pFrame Type List[List[RedChanel Type Int, GreenChanel Type Int, BlueChanel Type Int]]) returns None
+
+Subengine:
+    Attributs:
+        None
+    Methods:
+        getStates() returns [MqTT.Topic Type String, MqTT.Payload Type String]
+        update() returns None
+        onMessage(MqTT.Topic Type String, MqTT.Payload Type String) returns None
+
+Object:
+    Attributs:
+        isVisible Type Boolean
+        position Type Int
+        content Type List[List[RedChanel Type Int, GreenChanel Type Int, BlueChanel Type Int]]
+    Methods:
+        None

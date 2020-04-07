@@ -1,8 +1,6 @@
 import time
-import Strip
-import paho.mqtt.client as mqtt
 import multiprocessing
-
+from Lib.Compression import decompFrame
 
 class Engine:
 
@@ -12,20 +10,23 @@ class Engine:
         self.subengines = []
         self.processes = []
         self.frames = {}
-        self.pixels = Strip.Strip()
-        self.pixels.create()
-        self.pixels.blackout()
+        self.controler = None
+        self.pixellength = 0
 
+    def startMQTT(self,pName):
+        import paho.mqtt.client as mqtt
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
         self.client.connect("localhost", 1883, 60)
-        self.client.subscribe("strip/effekt/#")
-        self.client.subscribe("strip/command")
-        self.client.subscribe("strip/color/#")
+        self.client.subscribe(pName+ "/effekt/#")
+        self.client.subscribe(pName+ "/command")
+        self.client.subscribe(pName+ "/color/#")
         self.client.loop_start()
 
+    def setControler(self, pControler):
+        self.controler = pControler
+
     def on_message(self, client, userdata, msg):
-        global br
         topic = msg.topic
         print([msg.topic, msg.payload])
         if topic == "strip/command":
@@ -36,7 +37,7 @@ class Engine:
         elif topic.startswith("strip/color/"):
             topic = topic[12:]
             if topic == "brightnis":
-                br = int(msg.payload)
+                self.brightness = int(msg.payload)
         elif topic.startswith("strip/effekt/"):
             topic = topic[13:]
             for row in self.processes:
@@ -50,39 +51,59 @@ class Engine:
     def addSubEngine(self, pSub, pIsEnabled):
         if not self.isRunning:
             self.subengines.append(pSub)
-            self.processes.append([pSub.mqttTopic, None, None, pIsEnabled])
+            self.processes.append([pSub.mqttTopic, None, None, pIsEnabled, pSub.isCompressed])
 
     def run(self):
-        self.isRunning = True
+        try:
+            self.isRunning = True
+            self.controler.setup()
+            self.pixellength = self.controler.pixellength
 
-        while self.isRunning:
-            frames = [[-1, -1, -1]] * 450
-            for row in self.processes:
-                if row[3] and row[2]==None and row[1] == None:
-                    self.startSubEngine(row[0])
-                elif not row[3] and row[2] != None and row[1] != None:
-                    self.terminateSubEngine(row[0])
-                    pass
-                elif row[3]:
-                    frame = self.frames[row[0]]
-                    if row[2].poll():
-                        frame = row[2].recv()
-                        self.frames[row[0]] = frame
+            while self.isRunning:
+                fr = time.clock()
+                frames = [[-1, -1, -1]] * self.pixellength
+                for row in self.processes:
+                    if row[3] and row[2] != None and row[1] != None:
                         row[2].send("f")
-                    for i in range(len(frames)):
-                        if frames[i] == [-1, -1, -1]:
-                            frames[i] = frame[i]
-            for i in range(len(frames)):
-                color = []
-                for a in frames[i]:
-                    color.append(max(0, a))
-                self.pixels.setPixel(i, color=color)
-            self.pixels.show()
-            time.sleep(1)
-        self.terminate()
 
-    def terminate(self):
-        pass
+                for row in self.processes:
+                    if row[3] and row[2] == None and row[1] == None:
+                        self.startSubEngine(row[0])
+                    elif not row[3] and row[2] != None and row[1] != None:
+                        self.terminateSubEngine(row[0])
+                    elif row[3]:
+                        frame = self.frames[row[0]]
+                        if row[2].poll():
+                            if row[4]:
+                                frame = decompFrame(row[2].recv())
+                            else:
+                                frame = row[2].recv()
+                            self.frames[row[0]] = frame
+                        for i in range(len(frames)):
+                            if frames[i] == [-1, -1, -1]:
+                                frames[i] = frame[i]
+
+                brPercent = float(self.brightness) / 100
+                completeFrame = []
+                for i in range(len(frames)):
+                    color = []
+                    for a in frames[i]:
+                        color.append(int(max(0, a) * brPercent))
+                    completeFrame.append(color)
+
+                self.controler.setFrame(completeFrame)
+
+                fr = time.clock() - fr
+                if fr <= 0.02:
+                    time.sleep(0.02 - fr)
+
+        except KeyboardInterrupt:
+            self.terminateAll()
+        except:
+            print("Error: in Engine")
+            self.terminateAll()
+
+
 
     def startSubEngine(self, pMqttTopic):
         if self.isRunning: #[pSub.mqttTopic, process, parent, True]
@@ -103,7 +124,7 @@ class Engine:
                     row[3] = True
                     break
             process.start()
-            self.frames[pMqttTopic] = ([[-1, -1, -1]]*450)
+            self.frames[pMqttTopic] = ([[-1, -1, -1]]*self.pixellength)
 
     def terminateSubEngine(self, pMqttTopic):
         for row in self.processes:
@@ -119,14 +140,17 @@ class Engine:
                 row[3] = False
 
     def terminateAll(self):
+        self.isRunning = False
         for row in self.processes:
-            print("Terminate Process...")
-            row[2].send("t")
+            if row[2] != None:
+                print("Terminate Process... "+ row[0])
+                row[2].send("t")
 
         for row in self.processes:
-            print("Join Process...")
-            row[1].join()
-            row[2].close()
-            row[1] = None
-            row[2] = None
+            if row[1] != None and row[1].is_alive:
+                print("Join Process... " +row[0])
+                row[1].join()
+                row[2].close()
+                row[1] = None
+                row[2] = None
         print("Done!")
