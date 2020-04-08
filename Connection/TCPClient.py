@@ -1,13 +1,13 @@
 from socket import *
 import time
 
+
 class TCPClient:
 
     def __init__(self, pAddr, pPort, pBuffersize):
         self.addr = (pAddr, pPort)
         self.buffersize = pBuffersize
         self.sock = socket(AF_INET, SOCK_STREAM)
-
         self.isConnected = False
 
     def setTimeout(self, pTimeout):
@@ -28,7 +28,7 @@ class TCPClient:
             except ConnectionResetError:
                 self.disconnect()
 
-    def reciveData(self):
+    def receiveData(self):
         if self.isConnected:
             try:
                 return self.sock.recv(self.buffersize)

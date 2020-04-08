@@ -1,11 +1,12 @@
-from Lib.SubEngine import SubEngine
-from time import localtime
+from BaseClasses.MqttAble import MqttAble
+from BaseClasses.SubEngine import SubEngine
 from time import struct_time
 
-class Alarmclock(SubEngine):
+
+class Alarmclock(SubEngine, MqttAble):
 
     def __init__(self, pPixellength):
-        self.build("Alarmclock", pPixellength, 1)
+        super().__init__("Alarmclock", pPixellength, 1)
         self.alarms = []
 
     def update(self):
@@ -17,3 +18,6 @@ class Alarmclock(SubEngine):
 
     def getStates(self):
         return None
+
+    def terminating(self):
+        pass

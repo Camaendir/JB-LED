@@ -1,17 +1,19 @@
-from Lib.SubEngine import SubEngine
-from Lib.Objects.Snake import Snake
+from BaseClasses.MqttAble import MqttAble
+from BaseClasses.SubEngine import SubEngine
+from Objects.Snake import Snake
 
-class Alarm(SubEngine):
+
+class Alarm(SubEngine, MqttAble):
 
     def __init__(self, pPixellength, pSnakelength):
+        super().__init__("Alarm", self.pixellength)
         self.pixellength = pPixellength
         self.snakelength = pSnakelength
-        self.build("Alarm", self.pixellength, 1)
         self.rgb = [255, 0, 0]
         self.obj = []
 
         for snk in range(9):
-            self.obj.append(Snake(self.pixellength,length=self.snakelength))
+            self.obj.append(Snake(self.pixellength, length=self.snakelength))
             self.obj[snk].double = snk * 50
             self.addObj(self.obj[snk])
 
@@ -41,7 +43,8 @@ class Alarm(SubEngine):
             self.rgb[2] = int(payload)
 
     def getStates(self):
-        retVal = []
-        retVal.append(["strip/info/Alarm/enable", str(self.isEnabled)])
-        retVal.append(["strip/info/Alarm/color", '#%02x%02x%02x' % tuple(self.rgb)])
-        return retVal
+        return [["strip/info/Alarm/enable", str(self.isRunning)],
+                  ["strip/info/Alarm/color", '#%02x%02x%02x' % tuple(self.rgb)]]
+
+    def terminating(self):
+        pass

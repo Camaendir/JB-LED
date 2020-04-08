@@ -1,94 +1,109 @@
-#LED Animations
-###Installing **LSDLED**:
-1. Download https://github.com/jgarff/rpi_ws281x via git:
+# LED Animations
 
 
-    git clone https://github.com/jgarff/rpi_ws281x
+Control your LED-Strip from your RaspberryPi using multiprocessing and an object-oriented animation creation.
+
+Many thanks to [Jks23456](https://github.com/Jks23456) who did major work on this repository.
+
+### Getting started   
+
+1. Clone our Project:
+
+   ```shell script
+   git clone https://github.com/Camaendir/JB-LED.git
+   ```
     
-2. go to the python folder:
+2. Move into the folder
 
-
-    cd rpi_ws281x/python
+   ```shell script
+   cd JB-LED
+   ```
     
-3. create your working file:
+3. Install necessary packets (make sure you are using python 3.x):
 
-
-    touch FILENAME.py
+   ```shell script
+   pip install requirements.txt
+   ```
     
-4. import Engine:
+4. Now you can try out our TestScript, which prints the Animation to the Console:
 
-
-    from Lib.Engine import Engine
+   ```shell script
+   python TestEngine.py
+   ```
     
-5. create an Engine object and add your Subengines:
+5. Connect your own LED-Strip:
 
+    Look at the TestEngine.py file and follow the instructions in the comments
 
-    eng = Engine()
-    eng.addSubengine(YOURSUBENGINE(), True)
-    eng.run()
+### Creating your own Animations 
 
-Notice that sequencing matters. SubEngines that are added first are prioritiesed toward the once added later 
+1. Create a new File:
 
-_You are ready to go_
-
-To execute run:
-
-    sudo PYTHONPATH=".:build/lib.linux-armv7l-2.7" python YOURFILE.py
-     
-
-###Creating Subengines
-
-Of the bat **LSDLED** comes with a few SubEngines you can immediately add.
-If you want to create your own just follow this plan.
-
-1. Create a subclass of the Subengine class
-
-
-    from Lib.SubEngine import SubEngine
-    class YOURSUBENGINE(SubEngine):
-    .
-    .
-    .
+   ```shell script
+   touch YOURANIMATION.py
+   ```
     
-2. Implement the update method
+2. Create a subclass of SubEngine...
 
+   ```python
+   class YOURCLASS(SubEngine):
+   ```
     
-    def update(self):
-    .
-    .
-    .
+3. ... and implement the necessary methods:
 
-it gets called once for every frame.
-For what to do in your `update method see _Creating Animations_
-
-###Creating Animations
-
-
-1. Create an Object (inside your SubEngine)
-
-
-    obj = Object()
-    obj.build(ISVISIBLE, POSITION, CONTENT)
-    self.addObj(obj, LAYERNUMBER)
+    ```python
+   def __init__(self, name, pixellength):
+       super().__init__(name, pixellength) # the super constructor needs to be called
+       pass
+   
+   def update(self):
+       # one frame has passed. Move your animation to the next one.
+       # Nothing has to be returned
+       pass
     
-An Object consists of the isVisible ``Boolean`` a Position `Ìnteger` and a Content ``List``
+   def terminating(self):
+       # Your animation is about to be terminated. Do what you need to do
+       # Nothing has to be returned
+       pass
+   ```
 
-The Content List is a list containing multiple rgb values put into a List
+4. For your animation to actually do something you have to create an object...:
 
-example:
+   ```python
+   isVisible = True
+   position = 0
+   content = [[255, 255, 255]] * pixellength
+   obj = Object(isVisible, position, content)
+   # The content can be of any length (smaller than your pixellength)
+   # the content is a list of lists containing the pixels rgb values: [ [r,g,b], [r,g,b], ... ]   
+   ```
 
-    
-    content = [[255,255,255], [0,0,0], [-1, -1, -1]]
-    
-a value of [-1, -1, -1] is equivalent to transparent
+5. ... and add it to your SubEngine:
 
-2. In your update method update the position and content of your Objects
+    ```python
+   self.addObj(obj)
+   ```
+   
+6. To animate just change it's position and content...:
 
-3. In Later versions the Object will support more functionality
+   ```python
+   obj.position = 5
+   obj.content = [[255, 0, 0], [0, 255, 0], [0, 0, 255]] 
+   ```
+ 
+7. ... and/or add a few more:
 
+   ```python
+   isVisible = True
+   position = 0
+   content = [[255, 0, 0]] * pixellength
+   obj2 = Object(isVisible, position, content)
+   self.addObj(obj2)
+   ```
+   
+### Getting better
 
-###Controlling your Animation
+To explore what your SubEngine and Objects can do for you and what Controllers and Layers are visit our [Wiki](https://github.com/Camaendir/JB-LED/wiki) here on GitHub
 
-
-
-
+Thanks for looking at our repository and happy coding
+ 

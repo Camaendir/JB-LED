@@ -2,28 +2,25 @@ from socket import *
 
 from time import clock
 
+
 class TCPServer:
 
     def __init__(self, pPort, pBufferSize, ip=None, hostname=None):
         self.sock = socket(AF_INET, SOCK_STREAM)
         try:
-            if hostname == None:
+            if hostname is None:
                 hostname = gethostname()
-            if ip == None:
+            if ip is None:
                 ip = gethostbyname(hostname)
         except:
             print("Server: No Server Ip")
-
         self.host = [ip, hostname]
-
         self.addr = (self.host[0], pPort)
         self.sock.bind(self.addr)
-
         self.buffersize = pBufferSize
         self.timeout = 0
         self.streamTimeout = 0
         self.clockedOut = -1
-
         self.connection = [None, None]
         self.isConnected = False
 
@@ -49,7 +46,7 @@ class TCPServer:
             print("Server: Connection Timed out!")
         return False
 
-    def reciveData(self):
+    def receiveData(self):
         if self.isConnected:
             try:
                 data = self.connection[0].recv(self.buffersize)

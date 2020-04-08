@@ -1,10 +1,12 @@
-from Lib.SubEngine import SubEngine
-from Lib.Objects.Background import Background
+from BaseClasses.MqttAble import MqttAble
+from BaseClasses.SubEngine import SubEngine
+from Objects.Background import Background
 
-class Fading(SubEngine):
+
+class Fading(SubEngine, MqttAble):
 
     def __init__(self, pPixellength):
-        self.build("Fading", pPixellength, 1)
+        super().__init__("Fading", pPixellength, 1)
         self.rgb = [255, 0, 0]
         self.phase = ([0, 1, 0], [-1, 0, 0], [0, 0, 1], [0, -1, 0], [1, 0, 0], [0, 0, -1])
         self.index = 0
@@ -19,7 +21,7 @@ class Fading(SubEngine):
         self.p.setColor(self.rgb)
 
     def getStates(self):
-        return [["strip/info/Fading/enable", str(self.isEnabled)]]
+        return [["strip/info/Fading/enable", str(self.isRunning)]]
 
     def getColor(self, speed=1):
         for i in range(3):
@@ -34,3 +36,6 @@ class Fading(SubEngine):
 
             if self.index >= len(self.phase):
                 self.index = 0
+
+    def terminating(self):
+        pass
