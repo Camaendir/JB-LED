@@ -1,6 +1,6 @@
 class Layer:
 
-    def build(self, pixellength):
+    def __init__(self, pixellength):
         self.objList = []
         self.pixellength = pixellength
         self.transparent = [-1, -1, -1]

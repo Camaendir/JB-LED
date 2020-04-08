@@ -1,10 +1,12 @@
-from Lib.SubEngine import SubEngine
-from Lib.Objects.Background import Background
+from BaseClasses.MqttAble import MqttAble
+from BaseClasses.SubEngine import SubEngine
+from Objects.Background import Background
 
-class Lamp(SubEngine):
+
+class Lamp(SubEngine, MqttAble):
 
     def __init__(self, pPixellength):
-        self.build("Lamp", pPixellength ,1)
+        super().__init__("Lamp", pPixellength, 1)
         self.pixellength = pPixellength
         self.rgb = [255, 135, 0]
         self.p = Background(self.pixellength)
@@ -32,7 +34,8 @@ class Lamp(SubEngine):
             self.rgb[2] = int(payload)
 
     def getStates(self):
-        retVal = []
-        retVal.append(["strip/info/Lamp/enable",str(self.isEnabled)])
-        retVal.append(["strip/info/Lamp/color", '#%02x%02x%02x' % tuple(self.rgb)])
-        return retVal
+        return [["strip/info/Lamp/enable", str(self.isEnabled)],
+                  ["strip/info/Lamp/color", '#%02x%02x%02x' % tuple(self.rgb)]]
+
+    def terminating(self):
+        pass

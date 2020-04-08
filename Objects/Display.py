@@ -4,31 +4,31 @@ from socket import SOCK_DGRAM
 
 from threading import Thread
 
+
 class Display:
 
-    def __init__(self, pPort, pPixellength = 10, pWhiteList = None):
+    def __init__(self, pPort, pPixellength=10, pWhiteList=None):
         self.port = pPort
         self.pixellength = pPixellength
         self.whitelist = pWhiteList
 
         self.isVisible = True
         self.position = 0
-        self.content = [[-1,-1,-1]] * self.pixellength
-
+        self.content = [[-1, -1, -1]] * self.pixellength
 
         self.isRunning = False
         self.thread = None
         self.sock = None
 
     def startSocket(self):
-        if self.thread == None:
+        if self.thread is None:
             self.sock = socket(AF_INET, SOCK_DGRAM)
             self.sock.bind(("127.0.0.1", self.port))
             self.thread = Thread(target=self.recive)
             self.thread.start()
 
     def terminateSocket(self):
-        if self.thread != None:
+        if self.thread is not None:
             self.isRunning = False
             Thread.join(self.thread)
             self.sock.close()
@@ -37,8 +37,8 @@ class Display:
         self.isRunning = True
         while self.isRunning:
             try:
-                data, addr = self.sock.recvfrom(self.pixellength*3)
-                if self.whitelist != None:
+                data, addr = self.sock.recvfrom(self.pixellength * 3)
+                if self.whitelist is not None:
                     pass
                 else:
                     self.setContent(data)
@@ -50,7 +50,7 @@ class Display:
         frame = []
         block = []
         for byte in pBytes:
-            if len(block)>=3:
+            if len(block) >= 3:
                 frame.append(block)
                 block = []
             block.append(int(byte))

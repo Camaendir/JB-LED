@@ -1,23 +1,34 @@
-from Lib.Layer import Layer
-from Lib.Compression import compFrame
+from abc import ABC, abstractmethod
+from BaseClasses.Layer import Layer
+from BaseClasses.MqttAble import MqttAble
+from Cogs.Compression.BlockCompression import BlockCompression
 from time import sleep
 
-class SubEngine:
 
-    def build(self, mqtttopic, pixellength, layercount):
+class SubEngine(ABC):
+
+    @abstractmethod
+    def update(self):
+        pass
+
+    @abstractmethod
+    def terminating(self):
+        pass
+
+    def __init__(self, name, pixellength, layercount=1, compression=BlockCompression()):
         self.layList = []
-        self.mqttTopic = mqtttopic
+        self.name = name
         self.isCompressed = True
         self.isRunning = False
         self.pixellength = pixellength
         self.transparent = [-1, -1, -1]
+        self.pipe = None
+        self.compressor = compression
 
         for i in range(layercount):
-            tmp = Layer()
-            tmp.build(self.pixellength)
-            self.layList.append(tmp)
+            self.layList.append(Layer(self.pixellength))
 
-    def configur(self, pPipe):
+    def configure(self, pPipe):
         if not self.isRunning:
             self.pipe = pPipe
 
@@ -32,7 +43,7 @@ class SubEngine:
         self.isRunning = True
         while self.isRunning:
             try:
-                self.controler()
+                self.controller()
             except Exception as error:
                 print("SubEngine: Error in Controler")
                 print(str(error))
@@ -49,23 +60,24 @@ class SubEngine:
                 if plain[j] == self.transparent and frames[i][j] != self.transparent:
                     plain[j] = frames[i][j]
         if self.isCompressed:
-            self.pipe.send(compFrame(plain))
+            self.pipe.send(self.compressor.compressFrame(plain))
         else:
             self.pipe.send(plain)
 
-    def controler(self):
+    def controller(self):
         buff = []
         while self.pipe.poll():
             buff.append(self.pipe.recv())
-        if len(buff)==0:
+        if len(buff) == 0:
             sleep(0.001)
         else:
             for stri in buff:
                 if stri == "t":
                     self.isRunning = False
-                    self.onMessage("TERMINATE","TERMINATE")
+                    self.terminating()
                 elif stri == "f":
                     self.sendFrame()
                 elif stri.startswith("m:"):
-                    mqtt = stri[2:].split("/")
-                    self.onMessage(mqtt[0], mqtt[1])
+                    if issubclass(self, MqttAble):
+                        mqtt = stri[2:].split("/")
+                        self.onMessage(mqtt[0], mqtt[1])
