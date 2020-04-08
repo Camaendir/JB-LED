@@ -22,7 +22,7 @@ Many thanks to [Jks23456](https://github.com/Jks23456) who did major work on thi
 3. Install necessary packets (make sure you are using python 3.x):
 
    ```shell script
-   pip install requirements.txt
+   sudo pip install requirements.txt
    ```
     
 4. Now you can try out our TestScript, which prints the Animation to the Console:
