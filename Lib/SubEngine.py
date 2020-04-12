@@ -4,22 +4,24 @@ from time import sleep
 
 class SubEngine:
 
-    def build(self, mqtttopic, pixellength, layercount):
+    def build(self, mqtttopic, layercount, pIsCompressed, pCompressionClass):
         self.layList = []
         self.mqttTopic = mqtttopic
-        self.isCompressed = True
+        self.isCompressed = pIsCompressed
+        self.compClass = pCompressionClass
         self.isRunning = False
-        self.pixellength = pixellength
+        self.pixellength = -1
         self.transparent = [-1, -1, -1]
 
         for i in range(layercount):
             tmp = Layer()
-            tmp.build(self.pixellength)
+            tmp.build()
             self.layList.append(tmp)
 
-    def configur(self, pPipe):
+    def configur(self, pPipe, pPixellength):
         if not self.isRunning:
             self.pipe = pPipe
+            self.pixellength = pPixellength
 
     def addObj(self, obj, layer=0):
         self.layList[layer].addObj(obj)
@@ -42,7 +44,7 @@ class SubEngine:
         plain = [self.transparent] * self.pixellength
         frames = []
         for i in range(len(self.layList)):
-            frames.append(self.layList[i].getFrame())
+            frames.append(self.layList[i].getFrame(self.pixellength))
 
         for i in range(len(frames)):
             for j in range(self.pixellength):
@@ -57,6 +59,7 @@ class SubEngine:
         buff = []
         while self.pipe.poll():
             buff.append(self.pipe.recv())
+
         if len(buff)==0:
             sleep(0.001)
         else:

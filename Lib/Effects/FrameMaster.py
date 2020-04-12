@@ -44,6 +44,8 @@ class FrameMaster(SubEngine):
             else:
                 print("Listen")
                 self.tcpServer.listen()
+                if self.tcpServer.isConnected:
+                    print("Connected to: "+self.tcpServer.connection[1])
 
     def setContent(self, pBytes):
         buffer = []

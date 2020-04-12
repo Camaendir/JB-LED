@@ -1,13 +1,36 @@
 import time
 import multiprocessing
 from Lib.Compression import decompFrame
+from Lib.Effects.Alarm import Alarm
+
+class ProcessWrap:
+
+    def __init__(self, pSub, pIsEnabled):
+        self.mqttTopic = pSub.mqttTopic
+        self.subEngine = pSub
+        self.process = None
+        self.pipe = None
+        self.isAcknowledged = True
+        self.isEnabled = pIsEnabled
+        self.isCompressed = pSub.isCompressed
+        self.compClass = pSub.compClass
+
+    def isActive(self):
+        return self.pipe != None and self.process != None
+
+    def reset(self):
+        if self.isActive():
+            self.pipe.close()
+            self.pipe = None
+            self.process = None
+        self.isAcknowledged = True
+        self.isEnabled = False
 
 class Engine:
 
     def __init__(self):
         self.isRunning = False
         self.brightness = 100
-        self.subengines = []
         self.processes = []
         self.frames = {}
         self.controler = None
@@ -50,8 +73,7 @@ class Engine:
 
     def addSubEngine(self, pSub, pIsEnabled):
         if not self.isRunning:
-            self.subengines.append(pSub)
-            self.processes.append([pSub.mqttTopic, None, None, pIsEnabled, pSub.isCompressed])
+            self.processes.append(ProcessWrap(pSub, pIsEnabled))
 
     def run(self):
         try:
@@ -62,27 +84,31 @@ class Engine:
             while self.isRunning:
                 fr = time.clock()
                 frames = [[-1, -1, -1]] * self.pixellength
-                for row in self.processes:
-                    if row[3] and row[2] != None and row[1] != None:
-                        row[2].send("f")
+                for wrap in self.processes:
+                    if wrap.isEnabled and wrap.isAcknowledged and wrap.isActive():
+                        wrap.pipe.send("f")
+                for wrap in self.processes:
+                    if wrap.isEnabled and not wrap.isActive():
+                        self.startSubEngine(wrap)
+                    elif not wrap.isEnabled and wrap.isActive():
+                        self.terminateSubEngine(wrap)
+                    elif wrap.isEnabled:
+                        frame = self.frames[wrap.mqttTopic]
 
-                for row in self.processes:
-                    if row[3] and row[2] == None and row[1] == None:
-                        self.startSubEngine(row[0])
-                    elif not row[3] and row[2] != None and row[1] != None:
-                        self.terminateSubEngine(row[0])
-                    elif row[3]:
-                        frame = self.frames[row[0]]
-                        if row[2].poll():
-                            if row[4]:
-                                frame = decompFrame(row[2].recv())
+                        buff = []
+                        while wrap.pipe.poll():
+                            buff.append(wrap.pipe.recv())
+                            wrap.isAcknowledged = True
+
+                        if len(buff)>0:
+                            if wrap.isCompressed:
+                                frame = wrap.compClass.decompress(buff.pop(len(buff) - 1))
                             else:
-                                frame = row[2].recv()
-                            self.frames[row[0]] = frame
-                        for i in range(len(frames)):
+                                frame = buff.pop(len(buff) - 1)
+                            self.frames[wrap.mqttTopic] = frame
+                        for i in range(min(len(frame),len(frames), self.pixellength)):
                             if frames[i] == [-1, -1, -1]:
                                 frames[i] = frame[i]
-
                 brPercent = float(self.brightness) / 100
                 completeFrame = []
                 for i in range(len(frames)):
@@ -99,58 +125,37 @@ class Engine:
 
         except KeyboardInterrupt:
             self.terminateAll()
-        except:
+        except Exception as e:
             print("Error: in Engine")
+            print(e)
             self.terminateAll()
 
-
-
-    def startSubEngine(self, pMqttTopic):
-        if self.isRunning: #[pSub.mqttTopic, process, parent, True]
-            newSub = None
-            for sub in self.subengines:
-                if sub.mqttTopic == pMqttTopic:
-                    newSub = sub
-                    break
-            if newSub == None:
-                return
+    def startSubEngine(self, prWrap):
+        if self.isRunning and not prWrap.isActive(): #[pSub.mqttTopic, process, parent, True]
             parent, child = multiprocessing.Pipe()
-            process = multiprocessing.Process(target=newSub.run)
-            newSub.configur(child)
-            for row in self.processes:
-                if row[0] == pMqttTopic:
-                    row[1] = process
-                    row[2] = parent
-                    row[3] = True
-                    break
+            process = multiprocessing.Process(target=prWrap.subEngine.run)
+            prWrap.subEngine.configur(child, self.pixellength)
+            prWrap.process = process
+            prWrap.pipe = parent
+            prWrap.isEnabled = True
             process.start()
-            self.frames[pMqttTopic] = ([[-1, -1, -1]]*self.pixellength)
+            print("Started: " + prWrap.mqttTopic)
+            self.frames[prWrap.mqttTopic] = ([[-1, -1, -1]]*self.pixellength)
 
-    def terminateSubEngine(self, pMqttTopic):
-        for row in self.processes:
-            if row[0] == pMqttTopic:
-                print("Terminate: "+pMqttTopic)
-                row[2].send("t")
-                print("Joining Process...")
-                row[1].join()
-                print("Done!")
-                row[2].close()
-                row[1] = None
-                row[2] = None
-                row[3] = False
+    def terminateSubEngine(self, prWrap):
+        if prWrap.isActive():
+            print("Terminate: " + prWrap.mqttTopic)
+            prWrap.pipe.send("t")
+            print("Joining Process...")
+            prWrap.process.join()
+            print("Done!")
+            prWrap.pipe.close()
+            prWrap.process = None
+            prWrap.pipe = None
+            prWrap.isEnabled = False
+
 
     def terminateAll(self):
         self.isRunning = False
-        for row in self.processes:
-            if row[2] != None:
-                print("Terminate Process... "+ row[0])
-                row[2].send("t")
-
-        for row in self.processes:
-            if row[1] != None and row[1].is_alive:
-                print("Join Process... " +row[0])
-                row[1].join()
-                row[2].close()
-                row[1] = None
-                row[2] = None
-        print("Done!")
+        for wrap in self.processes:
+            self.terminateSubEngine(wrap)

@@ -6,5 +6,5 @@ if __name__ == '__main__':
     strip = FrameStreamer("192.168.2.114", 6501, 450)
     eng = Engine()
     eng.setControler(strip)
-    eng.addSubEngine(Alarm(450,25), True)
+    eng.addSubEngine(Alarm(25), True)
     eng.run()
