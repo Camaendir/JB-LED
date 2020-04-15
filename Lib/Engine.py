@@ -1,12 +1,10 @@
 import time
 import multiprocessing
-from Lib.Compression import decompFrame
-from Lib.Effects.Alarm import Alarm
 
 class ProcessWrap:
 
     def __init__(self, pSub, pIsEnabled):
-        self.mqttTopic = pSub.mqttTopic
+        self.name = pSub.name
         self.subEngine = pSub
         self.process = None
         self.pipe = None
@@ -93,7 +91,7 @@ class Engine:
                     elif not wrap.isEnabled and wrap.isActive():
                         self.terminateSubEngine(wrap)
                     elif wrap.isEnabled:
-                        frame = self.frames[wrap.mqttTopic]
+                        frame = self.frames[wrap.name]
 
                         buff = []
                         while wrap.pipe.poll():
@@ -105,10 +103,11 @@ class Engine:
                                 frame = wrap.compClass.decompress(buff.pop(len(buff) - 1))
                             else:
                                 frame = buff.pop(len(buff) - 1)
-                            self.frames[wrap.mqttTopic] = frame
-                        for i in range(min(len(frame),len(frames), self.pixellength)):
+                            self.frames[wrap.name] = frame
+                        for i in range(min(len(frame), self.pixellength)):
                             if frames[i] == [-1, -1, -1]:
                                 frames[i] = frame[i]
+
                 brPercent = float(self.brightness) / 100
                 completeFrame = []
                 for i in range(len(frames)):
@@ -116,7 +115,6 @@ class Engine:
                     for a in frames[i]:
                         color.append(int(max(0, a) * brPercent))
                     completeFrame.append(color)
-
                 self.controler.setFrame(completeFrame)
 
                 fr = time.clock() - fr
@@ -131,7 +129,7 @@ class Engine:
             self.terminateAll()
 
     def startSubEngine(self, prWrap):
-        if self.isRunning and not prWrap.isActive(): #[pSub.mqttTopic, process, parent, True]
+        if self.isRunning and not prWrap.isActive():
             parent, child = multiprocessing.Pipe()
             process = multiprocessing.Process(target=prWrap.subEngine.run)
             prWrap.subEngine.configur(child, self.pixellength)
@@ -139,12 +137,12 @@ class Engine:
             prWrap.pipe = parent
             prWrap.isEnabled = True
             process.start()
-            print("Started: " + prWrap.mqttTopic)
-            self.frames[prWrap.mqttTopic] = ([[-1, -1, -1]]*self.pixellength)
+            print("Started: " + prWrap.name)
+            self.frames[prWrap.name] = ([[-1, -1, -1]]*self.pixellength)
 
     def terminateSubEngine(self, prWrap):
         if prWrap.isActive():
-            print("Terminate: " + prWrap.mqttTopic)
+            print("Terminate: " + prWrap.name)
             prWrap.pipe.send("t")
             print("Joining Process...")
             prWrap.process.join()
@@ -153,7 +151,6 @@ class Engine:
             prWrap.process = None
             prWrap.pipe = None
             prWrap.isEnabled = False
-
 
     def terminateAll(self):
         self.isRunning = False

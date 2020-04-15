@@ -3,7 +3,7 @@ from Lib.Objects.Object import Object
 class Snake(Object):
 
     def __init__(self, pPixellength,length=25, color=[255, 0, 0]):
-        self.build(True, 0, [])
+        super().__init__()
         self.pixellength = pPixellength
         self.length = length
         self.setColor(color)

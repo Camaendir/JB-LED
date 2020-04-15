@@ -1,10 +1,15 @@
 from Lib.Engine import Engine
-from Lib.Effects.Alarm import Alarm
+from Lib.Effects.Lamp import Lamp
 from Lib.Controller.FrameStreamer import FrameStreamer
+from Lib.Controller.Console import Consol
+from Lib.Connection.TCPServer import TCPServer
+from time import sleep
+
+
 
 if __name__ == '__main__':
-    strip = FrameStreamer("192.168.2.114", 6501, 450)
     eng = Engine()
-    eng.setControler(strip)
-    eng.addSubEngine(Alarm(25), True)
+    eng.setControler(FrameStreamer("192.168.2.114", 6501, 450))
+    eng.addSubEngine(Lamp(), True)
     eng.run()
+

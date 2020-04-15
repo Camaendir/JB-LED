@@ -3,15 +3,16 @@ from Lib.Objects.Background import Background
 
 class Lamp(SubEngine):
 
-    def __init__(self, pPixellength):
-        self.build("Lamp", pPixellength ,1)
-        self.pixellength = pPixellength
-        self.rgb = [255, 135, 0]
-        self.p = Background(self.pixellength)
-        self.addObj(self.p)
+    def __init__(self, pColor = [255,135,0]):
+        super().__init__("Lamp", 1)
+        self.rgb = pColor
+        self.p = None
         self.isEnabled = False
 
     def update(self):
+        if self.p is None:
+            self.p = Background(self.pixellength)
+            self.addObj(self.p)
         if self.rgb != self.p.color:
             self.p.setColor(self.rgb)
         return

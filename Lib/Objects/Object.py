@@ -1,6 +1,7 @@
 class Object:
 
-    def build(self, isVisible, position, content):
-        self.isVisible = isVisible
-        self.position = position
-        self.content = content
+    def __init__(self, pIsVisible = True, pPosition = 0, pContent=[]):
+        self.isVisible = pIsVisible
+        self.position = pPosition
+        self.content = pContent
+

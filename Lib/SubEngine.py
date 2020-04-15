@@ -1,22 +1,20 @@
 from Lib.Layer import Layer
-from Lib.Compression import compFrame
 from time import sleep
 
 class SubEngine:
 
-    def build(self, mqtttopic, layercount, pIsCompressed, pCompressionClass):
+    def __init__(self, pName, pLayercount):
         self.layList = []
-        self.mqttTopic = mqtttopic
-        self.isCompressed = pIsCompressed
-        self.compClass = pCompressionClass
+        self.name = pName
         self.isRunning = False
         self.pixellength = -1
         self.transparent = [-1, -1, -1]
 
-        for i in range(layercount):
+        for i in range(pLayercount):
             tmp = Layer()
-            tmp.build()
             self.layList.append(tmp)
+
+
 
     def configur(self, pPipe, pPixellength):
         if not self.isRunning:
@@ -72,3 +70,4 @@ class SubEngine:
                 elif stri.startswith("m:"):
                     mqtt = stri[2:].split("/")
                     self.onMessage(mqtt[0], mqtt[1])
+

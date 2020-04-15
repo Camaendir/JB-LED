@@ -1,6 +1,6 @@
 class Layer:
 
-    def build(self):
+    def __init__(self):
         self.objList = []
         self.transparent = [-1, -1, -1]
 
