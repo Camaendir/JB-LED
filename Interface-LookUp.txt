@@ -1,0 +1,28 @@
+If you create subclasses of these classes you have to implement following methods and can use following attributes
+
+Controller:
+    Attributes:
+        pixellength Type Int
+    Methods to be implemented:
+        setup() returns None
+        setFrame(pFrame Type List[List[RedChanel Type Int, GreenChanel Type Int, BlueChanel Type Int]]) returns None
+
+Subengine:
+    Attributes:
+        None
+    Methods to be implemented:
+        update() returns None
+        terminating() returns None
+
+MqttAble:
+    Methods to be implemented:
+        getStates() returns [MqTT.Topic Type String, MqTT.Payload Type String]
+        onMessage(MqTT.Topic Type String, MqTT.Payload Type String) returns None
+
+Object:
+    Attributes:
+        isVisible Type Boolean
+        position Type Int
+        content Type List[List[RedChanel Type Int, GreenChanel Type Int, BlueChanel Type Int]]
+    Methods:
+        None

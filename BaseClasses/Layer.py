@@ -1,6 +1,6 @@
 class Layer:
 
-    def build(self, pixellength):
+    def __init__(self, pixellength):
         self.objList = []
         self.pixellength = pixellength
         self.transparent = [-1, -1, -1]
@@ -15,7 +15,6 @@ class Layer:
         field = []
         for i in range(self.pixellength):
             field.append(self.transparent)
-
         for obj in self.objList:
             if obj.isVisible:
                 for i in range(len(obj.content)):

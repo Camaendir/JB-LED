@@ -1,39 +1,31 @@
-from Lib.Engine import Engine
-from Lib.SubEngine import SubEngine
-from Lib.Panel import Panel
-
-from MainLamp import *
-from Musik import SpecTrain
-from Pulsar import Pulsar
-
-
-class Test(SubEngine):
-
-    def __init__(self, mqtt):
-        self.build(mqtt,450,3)
-        self.obj = Panel()
-        self.obj.isMirrored = True
-        self.setContent([[255,0,0]]*2+[[0,0,255]]*5)
-        print(self.content)
-        self.addObj(self.obj,2)
-
-    def update(self):
-        if self.obj.content[0] == [0,0,0]:
-            self.obj.content = [[255,255,255]]*450
-        else:
-            self.obj.content = [[0,0,0]]*450
-
-
-
-
+from BaseClasses.Engine import Engine
+from Effects.Alarm import Alarm
+from Controller.Console import Console
+# from Lib.Controller.StripArrangement import StripArrangement
 
 if __name__ == '__main__':
+    NumPixel = 100
+    Alarm_SnakeLength = 10
+
+    # Create a Controller
+    controller = Console(NumPixel)
+
+    # If you want to use a LED-Strip instead of the console uncomment this code and comment the part above
+    # stripPin = 13
+    # stripDMA = 11
+    # stripChanel = 1
+    # stripreversed = False
+    # controller = LEDStrip()
+    # controller.addStrip(NumPixel, stripPin, stripDMA, stripChanel, stripreversed)
+
+    # Create an Engine
     eng = Engine()
-    #eng.addSubEngine(Test('abc'), True)
-    eng.addSubEngine(Alarm(), False)
-    eng.addSubEngine(MultiSnake(), False)
-    eng.addSubEngine(Pulsar(), True)
-    #spec = SpecTrain()
-    #spec.isCompressed = True 
-    #eng.addSubEngine(spec, True)
+
+    # Add the correct controller
+    eng.setControler(controller)
+
+    # Add your Subengines
+    eng.addSubEngine(Alarm(NumPixel, Alarm_SnakeLength), True)
+
+    # And run the whole thing
     eng.run()
