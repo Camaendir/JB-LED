@@ -3,7 +3,7 @@
 
 Control your LED-Strip from your RaspberryPi using multiprocessing and an object-oriented animation creation.
 
-Many thanks to [Jks23456](https://github.com/Jks23456) who did major work on this repository.
+Many thanks to Jks23456 who did major work on this repository.
 
 ### Getting started   
 
