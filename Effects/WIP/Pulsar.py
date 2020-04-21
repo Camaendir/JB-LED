@@ -1,8 +1,9 @@
-from Lib.Object import Object
-from Lib.SubEngine import SubEngine
-from Adapter import Adapter
+from Resourcen.WIP.Adapter import Adapter
 import time
 from colorsys import hls_to_rgb, rgb_to_hls
+from Objects.Object import Object
+from BaseClasses.SubEngine import SubEngine
+
 
 class Pulsar(SubEngine):
 

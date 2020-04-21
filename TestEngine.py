@@ -4,6 +4,7 @@ from Controller.Console import Console
 # from Lib.Controller.StripArrangement import StripArrangement
 
 if __name__ == '__main__':
+
     NumPixel = 100
     Alarm_SnakeLength = 10
 
@@ -11,6 +12,7 @@ if __name__ == '__main__':
     controller = Console(NumPixel)
 
     # If you want to use a LED-Strip instead of the console uncomment this code and comment the part above
+    #   (this only works on an Rpi)
     # stripPin = 13
     # stripDMA = 11
     # stripChanel = 1
@@ -24,7 +26,7 @@ if __name__ == '__main__':
     # Add the correct controller
     eng.setControler(controller)
 
-    # Add your Subengines
+    # Add your subengines
     eng.addSubEngine(Alarm(NumPixel, Alarm_SnakeLength), True)
 
     # And run the whole thing
