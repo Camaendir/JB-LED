@@ -21,5 +21,7 @@ class Layer:
                     index = obj.position - i
                     if index < 0:
                         index = self.pixellength + index
+                    elif index >= self.pixellength:
+                        index = index - self.pixellength
                     field[index] = obj.content[i]
         return field
