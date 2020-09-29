@@ -7,6 +7,8 @@ Many thanks to Jks23456 who did major work on this repository.
 
 ### Getting started   
 
+You need to have python3 installed.
+
 1. Clone our Project:
 
    ```shell script
@@ -22,13 +24,13 @@ Many thanks to Jks23456 who did major work on this repository.
 3. Install necessary packets (make sure you are using python 3.x):
 
    ```shell script
-   sudo pip install requirements.txt
+   sudo pip3 install -r requirements.txt
    ```
     
 4. Now you can try out our TestScript, which prints the Animation to the Console:
 
    ```shell script
-   python TestEngine.py
+   python3 TestEngine.py
    ```
     
 5. Connect your own LED-Strip:
