@@ -1,4 +1,4 @@
-from Controller import Controller
+from Controller.Controller import Controller
 
 
 class Console(Controller):

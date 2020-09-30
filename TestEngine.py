@@ -1,7 +1,7 @@
 from BaseClasses.Engine import Engine
+from Controller.FrameViewer import FrameViewer
 from Effects.Alarm import Alarm
 from Controller.Console import Console
-# from Lib.Controller.StripArrangement import StripArrangement
 
 if __name__ == '__main__':
 
@@ -9,7 +9,7 @@ if __name__ == '__main__':
     Alarm_SnakeLength = 10
 
     # Create a Controller
-    controller = Console(NumPixel)
+    controller = FrameViewer(NumPixel)
 
     # If you want to use a LED-Strip instead of the console uncomment this code and comment the part above
     #   (this only works on an Rpi)

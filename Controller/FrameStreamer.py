@@ -1,7 +1,8 @@
 from Connection.TCPClient import TCPClient
+from Controller.Controller import Controller
 
 
-class FrameStreamer:
+class FrameStreamer(Controller):
 
     def __init__(self, pAddress, pPort, pPixellength):
         self.tcp = TCPClient(pAddress, pPort, pPixellength*3)

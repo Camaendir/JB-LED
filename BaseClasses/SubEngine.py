@@ -18,7 +18,7 @@ class SubEngine(ABC):
     def __init__(self, name, pixellength, layercount=1, compression=BlockCompression()):
         self.layList = []
         self.name = name
-        self.isCompressed = True
+        self.isCompressed = (compression is not None)
         self.isRunning = False
         self.pixellength = pixellength
         self.transparent = [-1, -1, -1]
@@ -45,7 +45,8 @@ class SubEngine(ABC):
             try:
                 self.controller()
             except Exception as error:
-                print("SubEngine: Error in Controler")
+                print("SubEngine: Error in Controller")
+                raise error
                 print(str(error))
 
     def sendFrame(self):
@@ -57,7 +58,7 @@ class SubEngine(ABC):
 
         for i in range(len(frames)):
             for j in range(self.pixellength):
-                if plain[j] == self.transparent and frames[i][j] != self.transparent:
+                if plain[j] == self.transparent:
                     plain[j] = frames[i][j]
         if self.isCompressed:
             self.pipe.send(self.compressor.compressFrame(plain))

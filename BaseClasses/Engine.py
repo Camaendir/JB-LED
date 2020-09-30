@@ -5,6 +5,8 @@ import multiprocessing
 from BaseClasses.EngineProcess import EngineProcess
 import paho.mqtt.client as mqtt
 
+from BaseClasses.MqttAble import MqttAble
+
 
 class Engine:
 
@@ -65,7 +67,7 @@ class Engine:
         if not self.isRunning:
             self.subengines.append(pSub)
             self.processes.append(
-                EngineProcess(pSub, pSub.mqttTopic, None, None, pIsEnabled, pSub.isCompressed, pSub.compressor)
+                EngineProcess(pSub, pSub.name if issubclass(pSub.__class__, MqttAble) else None, None, None, pIsEnabled, pSub.isCompressed, pSub.compressor)
             )
         else:
             print('Could not add SubEngine, because Engine is already running')
@@ -83,9 +85,9 @@ class Engine:
                         process.parent.send("f")
                 for process in self.processes:
                     if process.isEnabled and process.parent is None and process.process is None:
-                        self.startSubEngine(process.subengine)
+                        self.startSubEngine(process)
                     elif not process.isEnabled and process.parent is not None and process.process is not None:
-                        self.terminateSubEngine(process.subengine)
+                        self.terminateSubEngine(process)
                     elif process.isEnabled:
                         frame = self.frames[process.name]
                         if process.parent.poll():
@@ -111,8 +113,8 @@ class Engine:
 
         except KeyboardInterrupt:
             self.terminateAll()
-        except:
-            print("Unexpected Error in Engine:", sys.exc_info()[0])
+        except Exception as error:
+            print("Unexpected Error in Engine:", error)
             print("Terminating all SubEngines!")
             self.terminateAll()
             print("All SubEngines terminated.")

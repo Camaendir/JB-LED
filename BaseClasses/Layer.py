@@ -12,16 +12,19 @@ class Layer:
         self.objList.remove(obj)
 
     def getFrame(self):
-        field = []
-        for i in range(self.pixellength):
-            field.append(self.transparent)
+        field = [self.transparent] * self.pixellength
+
         for obj in self.objList:
-            if obj.isVisible:
-                for i in range(len(obj.content)):
-                    index = obj.position - i
-                    if index < 0:
-                        index = self.pixellength + index
-                    elif index >= self.pixellength:
-                        index = index - self.pixellength
-                    field[index] = obj.content[i]
+            if not obj.isVisible:
+                continue
+            content = obj.getContent()
+            for i in range(len(content)):
+                index = obj.position + i
+                if index < 0:
+                    index = self.pixellength + index
+                elif index >= self.pixellength:
+                    while index >= self.pixellength:
+                        index -= self.pixellength
+                if content[i] != self.transparent:
+                    field[index] = content[i]
         return field

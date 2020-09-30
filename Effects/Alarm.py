@@ -6,7 +6,7 @@ from Objects.Snake import Snake
 class Alarm(SubEngine, MqttAble):
 
     def __init__(self, pPixellength, pSnakelength):
-        super().__init__("Alarm", self.pixellength)
+        super().__init__("Alarm", pPixellength)
         self.pixellength = pPixellength
         self.snakelength = pSnakelength
         self.rgb = [255, 0, 0]

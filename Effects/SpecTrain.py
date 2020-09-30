@@ -1,7 +1,6 @@
 from colorsys import hls_to_rgb
 import time
 from BaseClasses.SubEngine import *
-from Objects.Panel import Panel
 
 # Not implemented yet needs to wait for resource overhaul
 class SpecTrain(SubEngine):
