@@ -2,6 +2,8 @@ from BaseClasses.Engine import Engine
 from Controller.FrameViewer import FrameViewer
 from Effects.Alarm import Alarm
 from Controller.Console import Console
+from Effects.SpecTrain import SpecTrain
+from Resources.MicrophoneData import MicrophoneData
 
 if __name__ == '__main__':
 
@@ -10,6 +12,8 @@ if __name__ == '__main__':
 
     # Create a Controller
     controller = FrameViewer(NumPixel)
+
+
 
     # If you want to use a LED-Strip instead of the console uncomment this code and comment the part above
     #   (this only works on an Rpi)
@@ -26,8 +30,11 @@ if __name__ == '__main__':
     # Add the correct controller
     eng.setControler(controller)
 
+    micro = MicrophoneData()
+    eng.registerResource(micro)
+    spec = SpecTrain()
     # Add your subengines
-    eng.addSubEngine(Alarm(NumPixel, Alarm_SnakeLength), True)
-
+    #eng.addSubEngine(Alarm(NumPixel, Alarm_SnakeLength), True)
+    eng.addSubEngine(spec, True)
     # And run the whole thing
     eng.run()
