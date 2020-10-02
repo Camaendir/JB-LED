@@ -1,53 +1,54 @@
-import sys
 import time
 import multiprocessing
+import threading
 
 from BaseClasses.EngineProcess import EngineProcess
 import paho.mqtt.client as mqtt
-
 from BaseClasses.MqttAble import MqttAble
+from BaseClasses.ResourceProcess import ResourceProcess
 
 
 class Engine:
 
     def __init__(self):
-        self.isRunning = False
-        self.brightness = 100
-        self.subengines = []
-        self.processes = []
-        self.frames = {}
-        self.controller = None
-        self.pixellength = 0
-        self.mqtt_client = None
-        self.pretopic = None
+        self.isRunning = False  # Global Shutdown
+        self.processes = []     # All SubEngines
+        self.frames = {}        # All current frames from the SubEngines
+        self.controller = None  # Configured Controller
+        self.pixellength = 0    # Global Pixellength
+        self.resourceProcesses = {}  # All Resources
+        self.threadLock = {}    # All Mutex for frame access
+        self.framerate = 0.05   # Global Framerate
+
+        # Waiting for MQTT-Overhaul
+        self.mqtt_client = None  # MQTT-Client
+        self.pretopic = None    # MQTT Topic Prefix
+
+# ----------- MQTT -----------
 
     def startMQTT(self, pretopic, host="localhost", port=1883, timeout=60):
         self.pretopic = pretopic
         self.mqtt_client = mqtt.Client()
         self.mqtt_client.on_message = self.on_message
         self.mqtt_client.connect(host, port, timeout)
-        self.mqtt_client.subscribe(pretopic + "/effekt/#")
+        self.mqtt_client.subscribe(pretopic + "/effect/#")
         self.mqtt_client.subscribe(pretopic + "/command")
         self.mqtt_client.subscribe(pretopic + "/color/#")
         self.mqtt_client.loop_start()
 
-    def setControler(self, pControler):
-        self.controller = pControler
-
     def on_message(self, client, userdata, msg):
         if not self.isRunning:
-            print("Recieved MQTT message but could not be processed, because Engine is not running")
             return
         topic = msg.topic
         if topic == self.pretopic + "/command":  # Command
             self.on_command(msg.payload, None)
 
-        elif topic.startswith(self.pretopic + "/color/"):  # Color change
-            sub_topic = topic[len(self.pretopic) + 7:]
-            if sub_topic == "brightness":
-                self.brightness = int(msg.payload)
+        # elif topic.startswith(self.pretopic + "/color/"):  # Color change
+            # sub_topic = topic[len(self.pretopic) + 7:]
+            # if sub_topic == "brightness":
+            #    self.brightness = int(msg.payload)
 
-        elif topic.startswith(self.pretopic + "/effekt/"):  # Effect Command
+        elif topic.startswith(self.pretopic + "/effect/"):  # Effect Command
             sub_topic = topic[len(self.pretopic) + 8:]
             for process in self.processes:
                 if sub_topic.startswith(process.name + "/"):
@@ -63,97 +64,140 @@ class Engine:
         elif command == "reset":
             self.controller.setFrame([[0, 0, 0]] * self.pixellength)
 
+# ----------- Configuration -----------
+
+    def setController(self, pController):
+        self.controller = pController
+
     def addSubEngine(self, pSub, pIsEnabled):
         if not self.isRunning:
-            self.subengines.append(pSub)
             self.processes.append(
-                EngineProcess(pSub, pSub.name if issubclass(pSub.__class__, MqttAble) else None, None, None, pIsEnabled, pSub.isCompressed, pSub.compressor)
+                EngineProcess(pSub, pSub.name if issubclass(pSub.__class__, MqttAble) else None, None, None, pIsEnabled,
+                              pSub.isCompressed, pSub.compressor)
             )
         else:
             print('Could not add SubEngine, because Engine is already running')
 
+    def registerResource(self, resource):
+        if isinstance(resource.name, str):
+            shm_name = resource.resource.shm.name
+            lock = multiprocessing.Lock()
+            parent, child = multiprocessing.Pipe()
+            resource.configure(child, lock)
+            process = multiprocessing.Process(target=resource.runEntry)
+            self.resourceProcesses[resource.name] = ResourceProcess(shm_name, process, parent, lock)
+        else:
+            lock = {}
+            parent, child = multiprocessing.Pipe()
+            process = multiprocessing.Process(target=resource.runEntry)
+            for i, nam in enumerate(resource.name):
+                lck = multiprocessing.Lock()
+                lock[nam] = lck
+                self.resourceProcesses[nam] = ResourceProcess(resource.resource[nam].shm.name,
+                                                              process if i == 0 else None, parent if i == 0 else None,
+                                                              lck)
+            resource.configure(child, lock)
+
+# ----------- Main Loop Functions -----------
+
+    def pipeManager(self):
+        rate = float(self.framerate) * 0.9
+        while self.isRunning:
+            for process in self.processes:
+                if process.parent is None:
+                    continue
+                if process.parent.poll():
+                    msg = process.parent.recv()
+                    # if isinstance(msg, str):
+                    #    pass
+                    # else:
+                    self.threadLock[process.name].acquire()
+                    self.frames[process.name] = process.compressor.decompressFrame(
+                        msg) if process.isCompressed else msg
+                    self.threadLock[process.name].release()
+                    #
+            time.sleep(rate)
+
     def run(self):
+
+        self.isRunning = True
+        threading.Thread(target=self.pipeManager).start()
+        self.controller.setup()
+        self.pixellength = self.controller.pixellength
+        self.startResources()
         try:
-            self.isRunning = True
-            self.controller.setup()
-            self.pixellength = self.controller.pixellength
             while self.isRunning:
-                fr = time.clock()
+                fr = time.time()
                 frames = [[-1, -1, -1]] * self.pixellength
                 for process in self.processes:
+                    # Send Frame request to every enabled SubEngine
                     if process.isEnabled and process.parent is not None and process.process is not None:
                         process.parent.send("f")
                 for process in self.processes:
+                    # Start SubEngine if not started
                     if process.isEnabled and process.parent is None and process.process is None:
                         self.startSubEngine(process)
+                    # Terminate SubEngine if not terminated
                     elif not process.isEnabled and process.parent is not None and process.process is not None:
-                        self.terminateSubEngine(process)
+                        process.terminate()
+                    # Get Frame from the SubEngine
                     elif process.isEnabled:
+                        self.threadLock[process.name].acquire()
                         frame = self.frames[process.name]
-                        if process.parent.poll():
-                            if process.isCompressed:
-                                frame = process.compressor.decompressFrame(process.parent.recv())
-                            else:
-                                frame = process.parent.recv()
-                            self.frames[process.name] = frame
+                        self.threadLock[process.name].release()
                         for i in range(len(frames)):
+                            # if pixel is transparent -> Overwrite it
                             if frames[i] == [-1, -1, -1]:
                                 frames[i] = frame[i]
-                brPercent = float(self.brightness) / 100
-                completeFrame = []
-                for i in range(len(frames)):
+                complete_frame = []
+                for f in frames:
                     color = []
-                    for a in frames[i]:
-                        color.append(int(max(0, a) * brPercent))
-                    completeFrame.append(color)
-                self.controller.setFrame(completeFrame)
-                fr = time.clock() - fr
-                if fr <= 0.02:
-                    time.sleep(0.02 - fr)
-
+                    for a in f:
+                        # Filter out negative and floating point values, ToDo: implement brightness
+                        color.append(int(max(0, a)))
+                    complete_frame.append(color)
+                self.controller.setFrame(complete_frame)
+                fr = time.time() - fr
+                if fr <= self.framerate:
+                    time.sleep(self.framerate - fr)
         except KeyboardInterrupt:
             self.terminateAll()
         except Exception as error:
             print("Unexpected Error in Engine:", error)
-            print("Terminating all SubEngines!")
             self.terminateAll()
-            print("All SubEngines terminated.")
             print("Shutting down Engine.")
+
+# ----------- Start and terminate SubProcesses -----------
+
+    def startResources(self):
+        for key in self.resourceProcesses:
+            if self.resourceProcesses[key].process is not None:
+                self.resourceProcesses[key].process.start()
 
     def startSubEngine(self, engineProcess):
         if self.isRunning:
             if engineProcess.subengine.isRunning:
-                print("Could not start SubEngine, because SubEngine is already running")
                 return
             parent, child = multiprocessing.Pipe()
             process = multiprocessing.Process(target=engineProcess.subengine.run)
-            engineProcess.subengine.configure(child)
+            resources_to_register = engineProcess.subengine.resourcesToRegister
+            resource_names = {}
+            resource_locks = {}
+            for name in resources_to_register:
+                resource_locks[name] = self.resourceProcesses[name].lock
+                resource_names[name] = self.resourceProcesses[name].shmName
+            engineProcess.subengine.configure(child, resource_names, resource_locks)
             engineProcess.process = process
             engineProcess.parent = parent
             engineProcess.isEnabled = True
+            if engineProcess.name not in self.threadLock.keys():
+                self.threadLock[engineProcess.name] = threading.Lock()
             process.start()
             self.frames[engineProcess.name] = ([[-1, -1, -1]] * self.pixellength)
-        else:
-            print("Could not start SubEngine, because Engine is not running")
-
-    def terminateSubEngine(self, process):
-        if not process.isEnabled:
-            process.parent = None
-            process.process = None
-            return
-        if process.parent is not None:
-            print("Terminate Process... " + process.name)
-            process.parent.send("t")
-        if process.process is not None and process.process.is_alive:
-            print("Join Process... " + process.name)
-            process.process.join()
-            process.parent.close()
-            process.process = None
-            process.parent = None
-            process.isEnabled = False
 
     def terminateAll(self):
         self.isRunning = False
         for process in self.processes:
-            self.terminateSubEngine(process)
-        print("Done!")
+            process.terminate()
+        for key in self.resourceProcesses.keys():
+            self.resourceProcesses[key].terminate()
