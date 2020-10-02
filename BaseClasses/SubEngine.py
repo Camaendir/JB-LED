@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from BaseClasses.Layer import Layer
-from BaseClasses.MqttAble import MqttAble
 from Cogs.Compression.BlockCompression import BlockCompression
 from time import sleep
 from multiprocessing import shared_memory
@@ -103,7 +102,9 @@ class SubEngine(ABC):
                     print("SubEngine terminated")
                 elif stri == "f":
                     self.sendFrame()
-                elif stri.startswith("m:"):
-                    if issubclass(self, MqttAble):
-                        mqtt = stri[2:].split("/")
-                        self.onMessage(mqtt[0], mqtt[1])
+
+                # MQTT-Stuff
+                # elif stri.startswith("m:"):
+                #    if issubclass(self, MqttAble):
+                #        mqtt = stri[2:].split("/")
+                #        self.onMessage(mqtt[0], mqtt[1])
