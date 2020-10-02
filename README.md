@@ -7,7 +7,7 @@ Many thanks to Jks23456 who did major work on this repository.
 
 ### Getting started   
 
-You need to have python3 installed.
+You need to have python3.8 installed.
 
 1. Clone our Project:
 
@@ -24,7 +24,7 @@ You need to have python3 installed.
 3. Install necessary packets (make sure you are using python 3.x):
 
    ```shell script
-   sudo pip3 install -r requirements.txt
+   sudo pip3.8 install -r requirements.txt
    ```
     
 4. Now you can try out our TestScript, which prints the Animation to the Console:
