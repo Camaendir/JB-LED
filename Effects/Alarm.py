@@ -1,28 +1,30 @@
 from BaseClasses.MqttAble import MqttAble
-from BaseClasses.SubEngine import SubEngine
 from Objects.Snake import Snake
 
 
-class Alarm(SubEngine, MqttAble):
+class Alarm(MqttAble):
 
-    def __init__(self, pPixellength, pSnakelength):
-        super().__init__("Alarm", pPixellength)
+    def __init__(self, pPixellength, pSnakelength, name="Alarm", mqtt_topic=None, snake_count=1):
+        if mqtt_topic is None:
+            mqtt_topic = name
+        super().__init__(mqtt_topic, name, pPixellength)
         self.pixellength = pPixellength
         self.snakelength = pSnakelength
         self.rgb = [255, 0, 0]
         self.obj = []
+        self.snake_count = snake_count
 
-        for snk in range(9):
+        for snk in range(self.snake_count):
             self.obj.append(Snake(self.pixellength, length=self.snakelength))
             self.obj[snk].double = snk * 50
             self.addObj(self.obj[snk])
 
     def setColor(self, color):
-        for snk in range(9):
+        for snk in range(self.snake_count):
             self.obj[snk].setColor(color)
 
     def update(self):
-        for snk in range(9):
+        for snk in range(self.snake_count):
             self.obj[snk].move()
             if self.obj[snk].rgb != self.rgb:
                 self.obj[snk].setColor(self.rgb)

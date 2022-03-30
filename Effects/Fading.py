@@ -1,12 +1,13 @@
 from BaseClasses.MqttAble import MqttAble
-from BaseClasses.SubEngine import SubEngine
 from Objects.Background import Background
 
 
-class Fading(SubEngine, MqttAble):
+class Fading(MqttAble):
 
-    def __init__(self, pPixellength):
-        super().__init__("Fading", pPixellength, 1)
+    def __init__(self, pPixellength, name="Fading", mqtt_topic=None):
+        if mqtt_topic is None:
+            mqtt_topic = name
+        super().__init__(mqtt_topic, name, pPixellength, 1)
         self.rgb = [255, 0, 0]
         self.phase = ([0, 1, 0], [-1, 0, 0], [0, 0, 1], [0, -1, 0], [1, 0, 0], [0, 0, -1])
         self.index = 0
@@ -14,7 +15,7 @@ class Fading(SubEngine, MqttAble):
         self.addObj(self.p)
 
     def onMessage(self, topic, payload):
-        print(["Fading", topic, payload])
+        print([self.name, topic, payload])
 
     def update(self):
         self.getColor()

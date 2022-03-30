@@ -1,6 +1,6 @@
 class EngineProcess:
 
-    def __init__(self, subengine, name, process, parent, isEnabled, isCompressed, compressor):
+    def __init__(self, subengine, name, process, parent, isEnabled, isCompressed, compressor, startPixel, mqttTopic):
         self.subengine = subengine
         self.name = name
         self.process = process
@@ -8,6 +8,9 @@ class EngineProcess:
         self.parent = parent
         self.isCompressed = isCompressed
         self.compressor = compressor
+        self.startPixel = startPixel
+        self.isMqtt = mqttTopic is not None
+        self.mqttTopic = mqttTopic
     
     def terminate(self):
         if not self.isEnabled:

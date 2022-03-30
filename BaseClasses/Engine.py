@@ -1,6 +1,8 @@
 import time
 import multiprocessing
 import threading
+import traceback
+from typing import List
 
 from BaseClasses.EngineProcess import EngineProcess
 import paho.mqtt.client as mqtt
@@ -10,12 +12,12 @@ from BaseClasses.ResourceProcess import ResourceProcess
 
 class Engine:
 
-    def __init__(self):
+    def __init__(self, enable_mqtt=False):
         self.isRunning = False  # Global Shutdown
-        self.processes = []     # All SubEngines
+        self.processes: List[EngineProcess] = []     # All SubEngines
         self.frames = {}        # All current frames from the SubEngines
-        self.controller = None  # Configured Controller
-        self.pixellength = 0    # Global Pixellength
+        self.controller = []  # Configured Controller
+        self.pixelLength = 0    # Global Pixellength
         self.resourceProcesses = {}  # All Resources
         self.threadLock = {}    # All Mutex for frame access
         self.framerate = 0.05   # Global Framerate
@@ -24,56 +26,64 @@ class Engine:
         self.mqtt_client = None  # MQTT-Client
         self.pretopic = None    # MQTT Topic Prefix
 
+        if enable_mqtt:
+            self.startMQTT("/led")
+
 # ----------- MQTT -----------
 
-    def startMQTT(self, pretopic, host="localhost", port=1883, timeout=60):
+    def startMQTT(self, pretopic, host="192.168.178.69", port=1883, timeout=60):
         self.pretopic = pretopic
         self.mqtt_client = mqtt.Client()
         self.mqtt_client.on_message = self.on_message
         self.mqtt_client.connect(host, port, timeout)
         self.mqtt_client.subscribe(pretopic + "/effect/#")
         self.mqtt_client.subscribe(pretopic + "/command")
-        self.mqtt_client.subscribe(pretopic + "/color/#")
         self.mqtt_client.loop_start()
 
     def on_message(self, client, userdata, msg):
         if not self.isRunning:
             return
         topic = msg.topic
+        payload = msg.payload.decode("utf-8")
         if topic == self.pretopic + "/command":  # Command
-            self.on_command(msg.payload, None)
-
-        # elif topic.startswith(self.pretopic + "/color/"):  # Color change
-            # sub_topic = topic[len(self.pretopic) + 7:]
-            # if sub_topic == "brightness":
-            #    self.brightness = int(msg.payload)
+            self.on_command(payload, None)
 
         elif topic.startswith(self.pretopic + "/effect/"):  # Effect Command
             sub_topic = topic[len(self.pretopic) + 8:]
             for process in self.processes:
-                if sub_topic.startswith(process.name + "/"):
-                    effect_topic = sub_topic[len(process.name) + 1:]
-                    if effect_topic == "enable":
-                        process.isEnabled = msg.payload.lower() in ("true", "t", "1", "on")
-                    elif process.parent is not None:
-                        process.parent.send("m:" + effect_topic + "/" + msg.payload)
+                if process.isMqtt:
+                    if sub_topic.startswith(process.mqttTopic + "/"):
+                        effect_topic = sub_topic[len(process.mqttTopic) + 1:]
+                        if effect_topic == "enable":
+                            enabled = payload.lower() in ("true", "t", "1", "on")
+                            if enabled:
+                                self.startSubEngine(process)
+                            else:
+                                process.terminate()
+                            process.isEnabled = enabled
+                        elif process.parent is not None:
+                            process.parent.send("m:" + effect_topic + "#" + payload)
 
     def on_command(self, command, attributes):
-        if command == "update":
-            pass
-        elif command == "reset":
-            self.controller.setFrame([[0, 0, 0]] * self.pixellength)
+        if command == "reset":
+            self.resetFrame()
+        elif command == "shutdown":
+            for process in self.processes:
+                process.terminate()
+                process.isEnabled = False
 
 # ----------- Configuration -----------
 
-    def setController(self, pController):
-        self.controller = pController
+    def registerController(self, pController, start_pixel, end_pixel):
+        if self.isRunning:
+            return
+        self.controller.append((pController, start_pixel, end_pixel))
 
-    def addSubEngine(self, pSub, pIsEnabled):
+    def addSubEngine(self, pSub, pIsEnabled, startPixel):
         if not self.isRunning:
             self.processes.append(
-                EngineProcess(pSub, pSub.name if issubclass(pSub.__class__, MqttAble) else None, None, None, pIsEnabled,
-                              pSub.isCompressed, pSub.compressor)
+                EngineProcess(pSub, pSub.name, None, None, pIsEnabled,
+                              pSub.isCompressed, pSub.compressor, startPixel, pSub.mqttTopic if issubclass(pSub.__class__, MqttAble) else None)
             )
         else:
             print('Could not add SubEngine, because Engine is already running')
@@ -119,16 +129,17 @@ class Engine:
             time.sleep(rate)
 
     def run(self):
-
         self.isRunning = True
         threading.Thread(target=self.pipeManager).start()
-        self.controller.setup()
-        self.pixellength = self.controller.pixellength
+        self.pixelLength = 0
+        for controller, _, end_pixel in self.controller:
+            controller.setup()
+            self.pixelLength = max(self.pixelLength, end_pixel)
         self.startResources()
         try:
             while self.isRunning:
                 fr = time.time()
-                frames = [[-1, -1, -1]] * self.pixellength
+                frames = [[-1, -1, -1]] * self.pixelLength
                 for process in self.processes:
                     # Send Frame request to every enabled SubEngine
                     if process.isEnabled and process.parent is not None and process.process is not None:
@@ -145,27 +156,38 @@ class Engine:
                         self.threadLock[process.name].acquire()
                         frame = self.frames[process.name]
                         self.threadLock[process.name].release()
-                        for i in range(len(frames)):
+                        for i in range(len(frame)):
+                            if (i + process.startPixel) > len(frames) - 1:
+                                break
                             # if pixel is transparent -> Overwrite it
-                            if frames[i] == [-1, -1, -1]:
-                                frames[i] = frame[i]
+                            if frames[process.startPixel + i] == [-1, -1, -1]:
+                                frames[process.startPixel + i] = frame[i]
                 complete_frame = []
                 for f in frames:
                     color = []
                     for a in f:
-                        # Filter out negative and floating point values, ToDo: implement brightness
+                        # Filter out negative and floating point values
                         color.append(int(max(0, a)))
                     complete_frame.append(color)
-                self.controller.setFrame(complete_frame)
+                self.setFrame(complete_frame)
                 fr = time.time() - fr
                 if fr <= self.framerate:
                     time.sleep(self.framerate - fr)
         except KeyboardInterrupt:
             self.terminateAll()
         except Exception as error:
+            print(traceback.format_exc())
             print("Unexpected Error in Engine:", error)
             self.terminateAll()
             print("Shutting down Engine.")
+
+    def setFrame(self, frame):
+        for controller, start, end in self.controller:
+            controller.setFrame(frame[start:end])
+
+    def resetFrame(self):
+        for controller, start, end in self.controller:
+            controller.setFrame([[0,0,0]] * (end - start))
 
 # ----------- Start and terminate SubProcesses -----------
 
@@ -193,7 +215,7 @@ class Engine:
             if engineProcess.name not in self.threadLock.keys():
                 self.threadLock[engineProcess.name] = threading.Lock()
             process.start()
-            self.frames[engineProcess.name] = ([[-1, -1, -1]] * self.pixellength)
+            self.frames[engineProcess.name] = ([[-1, -1, -1]] * (self.pixelLength - engineProcess.startPixel))
 
     def terminateAll(self):
         self.isRunning = False

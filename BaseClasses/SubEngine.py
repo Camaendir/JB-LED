@@ -102,9 +102,7 @@ class SubEngine(ABC):
                     print("SubEngine terminated")
                 elif stri == "f":
                     self.sendFrame()
-
                 # MQTT-Stuff
-                # elif stri.startswith("m:"):
-                #    if issubclass(self, MqttAble):
-                #        mqtt = stri[2:].split("/")
-                #        self.onMessage(mqtt[0], mqtt[1])
+                elif stri.startswith("m:"):
+                    mqtt = stri[2:].split("#")
+                    self.onMessage(mqtt[0], mqtt[1])

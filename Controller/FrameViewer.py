@@ -1,16 +1,17 @@
 from threading import Thread
-from tkinter import Tk, Frame
+import pygame
 from Controller.Controller import Controller
 
 
 class FrameViewer(Controller):
 
-    def __init__(self, pPixellength, pPixelSize=16):
+    def __init__(self, pPixellength, pPixelSize=20):
         super().__init__()
         self.pixellength = pPixellength
         self.pixelsize = pPixelSize
         self.pixel = []
         self.frame = None
+        self.display = None
 
     def setup(self):
         self.run()
@@ -18,17 +19,13 @@ class FrameViewer(Controller):
     def setFrame(self, pFrame):
         if len(pFrame) == self.pixellength:
             for i in range(self.pixellength):
-                self.pixel[i]['background'] = '#%02x%02x%02x' % tuple(pFrame[i])
-            self.frame.update_idletasks()
-            self.frame.update()
+                pygame.draw.rect(self.display, pFrame[i], (self.pixelsize*i, 0, self.pixelsize, self.pixelsize))
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                raise Exception("Closed Window")
 
     def run(self):
-        self.frame = Tk()
-        self.frame.wm_minsize(self.pixelsize * self.pixellength, self.pixelsize)
-        self.frame.wm_maxsize(self.pixelsize * self.pixellength, self.pixelsize)
-        for i in range(self.pixellength):
-            tmp = Frame(self.frame, bg="#000000")
-            tmp.place(x=i * self.pixelsize, y=0, width=self.pixelsize, height=self.pixelsize)
-            self.pixel.append(tmp)
-        self.frame.update_idletasks()
-        self.frame.update()
+        pygame.init()
+        self.display = pygame.display.set_mode((self.pixellength * self.pixelsize, self.pixelsize))
+        self.display.fill((0, 0, 0))
