@@ -1,4 +1,4 @@
-from Controller import Controller
+from Controller.Controller import Controller
 from Controller.neopixel import *
 from time import sleep
 
@@ -21,7 +21,7 @@ class LEDStrip(Controller):
         self.isCreated = True
         for row in self.prelayout:
             self.pixellength = self.pixellength + row[0]
-            obj = Adafruit_NeoPixel(row[0], row[1], 1200000, row[2], False, 128, row[3])
+            obj = Adafruit_NeoPixel(row[0], row[1], 500000, row[2], False, 128, row[3])
             obj.begin()
             self.layout.append([obj, row[0], row[4]])
 
