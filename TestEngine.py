@@ -1,17 +1,18 @@
 from BaseClasses.Engine import Engine
 from Controller.FrameViewer import FrameViewer
+from Controller.Console import Console
 from Effects.Alarm import Alarm
-from Controller.LEDStrip import LEDStrip
-from Effects.SpecTrain import SpecTrain
-from Resources.MicrophoneData import MicrophoneData
+#from Controller.LEDStrip import LEDStrip
+#from Effects.SpecTrain import SpecTrain
+#from Resources.MicrophoneData import MicrophoneData
 
 if __name__ == '__main__':
 
-    NumPixel = 100
+    NumPixel = 144
     Alarm_SnakeLength = 10
 
     # Create a Controller
-    controller = FrameViewer(NumPixel)
+    controller = Console(NumPixel)
 
     # If you want to use a LED-Strip instead of the FrameViewer uncomment this code and comment the part above
     #   (this only works on an RPi)

@@ -12,5 +12,6 @@ class Console(Controller):
 
     def setFrame(self, pFrame):
         if self.lastFrame != pFrame:
-            print("Current Frame: " + str(pFrame))
+            image = str(pFrame).replace(" ", "")
+            print(image)
             self.lastFrame = pFrame
