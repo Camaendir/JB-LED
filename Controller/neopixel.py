@@ -1,7 +1,6 @@
 # Adafruit NeoPixel library port to the rpi_ws281x library.
 # Author: Tony DiCola (tony@tonydicola.com), Jeremy Garff (jer@jers.net)
-#import _rpi_ws281x as ws
-import time as ws
+import _rpi_ws281x as ws
 
 
 def Color(red, green, blue):
